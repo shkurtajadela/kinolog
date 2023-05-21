@@ -8,13 +8,13 @@ def db_start():
     db = sq.connect('bot_db.db')
     cur = db.cursor()
 
-    cur.execute("CREATE TABLE IF NOT EXISTS Kinolog(kinolog_id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, surname TEXT, "
+    cur.execute("CREATE TABLE IF NOT EXISTS Kinolog(kinolog_id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, name TEXT, surname TEXT, "
                 "patronymic TEXT, birthday TEXT, email TEXT, education TEXT, other_education TEXT, communities TEXT,"
                 "practice_date TEXT, online_work TEXT, supervised TEXT, other_interests TEXT, kinolog_site TEXT,"
                 "motivation TEXT, work_stages TEXT, dog_teaching TEXT, influenced_by TEXT, punishment TEXT, "
                 "punishment_effect TEXT, ammunition TEXT, other_activities TEXT, work_methods TEXT, "
                 "choice_importance TEXT, training_situation TEXT, advise TEXT, video TEXT, form_status TEXT)")
-    cur.execute("CREATE TABLE IF NOT EXISTS Dog(dog_id INTEGER PRIMARY KEY AUTOINCREMENT, problem TEXT, age INTEGER, "
+    cur.execute("CREATE TABLE IF NOT EXISTS Dog(dog_id INTEGER PRIMARY KEY AUTOINCREMENT, chat_id INTEGER, problem TEXT, age INTEGER, "
                 "breed TEXT, weight INTEGER, origin TEXT, living_together TEXT, diseases TEXT)")
     cur.execute("CREATE TABLE IF NOT EXISTS Consultation(consult_id INTEGER PRIMARY KEY AUTOINCREMENT, "
                 "kinolog_id INTEGER, dog_id INTEGER, consult_status INTEGER, consult_date datetime, consult_sum TEXT, "
@@ -23,13 +23,13 @@ def db_start():
     db.commit()
 
 
-def new_kinolog(name: str, surname: str, patronymic: str, birthday: str, email: str,
+def new_kinolog(chat_id: int, name: str, surname: str, patronymic: str, birthday: str, email: str,
                 education: str, other_education: str, communities: str, practice_date: str, online_work: str,
                 supervised: str, other_interests: str, kinolog_site: str, motivation: str, work_stages: str,
                 dog_teaching: str, influenced_by: str, punishment: str, punishment_effect: str, ammunition: str,
                 other_activities: str, work_methods: str, choice_importance: str, training_situation: str, advise: str):
-    cur.execute("INSERT INTO Kinolog VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (None, name, surname, patronymic, birthday, email, education, other_education, communities,
+    cur.execute("INSERT INTO Kinolog VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (None, chat_id, name, surname, patronymic, birthday, email, education, other_education, communities,
                  practice_date, online_work, supervised, other_interests, kinolog_site, motivation, work_stages,
                  dog_teaching, influenced_by, punishment, punishment_effect, ammunition, other_activities,
                  work_methods, choice_importance, training_situation, advise, '', 'form'))
@@ -37,10 +37,10 @@ def new_kinolog(name: str, surname: str, patronymic: str, birthday: str, email: 
     db.commit()
 
 
-def new_dog(problem: str, age:int, breed: str, weight: int, origin: str, living_together: str,
+def new_dog(chat_id: int, problem: str, age:str, breed: str, weight: int, origin: str, living_together: str,
             diseases: str):
-    cur.execute("INSERT INTO Checks VALUES(?, ?, ?, ?, ?, ?, ?, ?)",
-                (None, problem, age, breed, weight, origin, living_together, diseases))
+    cur.execute("INSERT INTO Dog VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (None, chat_id, problem, age, breed, weight, origin, living_together, diseases))
 
     db.commit()
 

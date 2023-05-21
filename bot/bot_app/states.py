@@ -42,3 +42,14 @@ class MainMenuStatesGroup(StatesGroup):
 class KinologFormSubmissionStatesGroup(StatesGroup):
     kinolog_form_submission = State()
 
+
+class DogFormStatesGroup(StatesGroup):
+    problem = State()
+    age = State()
+    breed = State()
+    weight = State()
+    origin = State()
+    living_together = State() 
+    diseases = State()
+    diseases_list = State()
+    

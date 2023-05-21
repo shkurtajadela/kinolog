@@ -4,12 +4,12 @@ from bot.help_func.help_func import get_date
 from bot.help_func.parse_db import parse_dog, parse_kinolog, parse_consult, parse_consults
 
 
-def new_kinolog(name: str, surname: str, patronymic: str, birthday: str, email: str,
+def new_kinolog(chat_id: int, name: str, surname: str, patronymic: str, birthday: str, email: str,
                 education: str, other_education: str, communities: str, practice_date: str, online_work: str,
                 supervised: str, other_interests: str, kinolog_site: str, motivation: str, work_stages: str,
                 dog_teaching: str, influenced_by: str, punishment: str, punishment_effect: str, ammunition: str,
                 other_activities: str, work_methods: str, choice_importance: str, training_situation: str, advise: str):
-    sqlite.new_kinolog(name=name, surname=surname, patronymic=patronymic, birthday=birthday, email=email,
+    sqlite.new_kinolog(chat_id=chat_id, name=name, surname=surname, patronymic=patronymic, birthday=birthday, email=email,
                        education=education, other_education=other_education, communities=communities,
                        practice_date=practice_date, online_work=online_work, supervised=supervised,
                        other_interests=other_interests, kinolog_site=kinolog_site, motivation=motivation,
@@ -19,9 +19,9 @@ def new_kinolog(name: str, surname: str, patronymic: str, birthday: str, email: 
                        choice_importance=choice_importance, training_situation=training_situation, advise=advise)
 
 
-def new_dog(problem: str, age:int, breed: str, weight: int, origin: str, living_together: str,
+def new_dog(chat_id: int, problem: str, age:str, breed: str, weight: int, origin: str, living_together: str,
             diseases: str):
-    sqlite.new_dog(problem=problem, age=age, breed=breed, weight=weight, origin=origin, living_together=living_together,
+    sqlite.new_dog(chat_id=chat_id, problem=problem, age=age, breed=breed, weight=weight, origin=origin, living_together=living_together,
                    diseases=diseases)
 
 def get_dog(dog_id: int):

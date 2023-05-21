@@ -25,7 +25,7 @@ async def callback_user_type(callback: types.CallbackQuery, state: FSMContext):
         await bot.send_message(chat_id=callback.from_user.id, text=text)
         await GeneralStates.kinolog.set()
     elif callback.data == 'user':
-        text = 'Welcome to user interface! Go to /form to write information about your dog!'
+        text = 'Welcome to user interface! Go to /dogform to write information about your dog!'
         await bot.send_message(chat_id=callback.from_user.id, text=text)
         await GeneralStates.user.set()
 
