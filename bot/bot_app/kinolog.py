@@ -1,7 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from .app import dp, bot
-from .keyboards import get_ikb_supervised
+from .keyboards import get_ikb_supervised, get_ikb_problem
 from aiogram import types, Dispatcher
 from .states import KinologFormStatesGroup, GeneralStates
 from bot.db.db_interface import new_kinolog
@@ -166,17 +166,39 @@ async def form_load_kinolog_advise(message:types.Message, state:FSMContext):
     async with state.proxy() as data:
         data['advise'] = message.text
 
-        new_kinolog(chat_id=message.from_user.id, name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'],
+        text = "Какие проблемы собаки вы бы хотели решать?"
+        reply_markup  = get_ikb_problem()
+        await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
+        await KinologFormStatesGroup.next()
+
+async def form_load_kinolog_problem(callback:types.CallbackQuery, state:FSMContext):
+    async with state.proxy() as data:
+        ans = {'agression': 'Агрессия по отношению к другим собакам/животным',
+         'barking': 'Лай на звуки/дверь и тревожность дома',
+         'behaviour': 'Деструктивное поведение (порча вещей, дефекция и тд)',
+         'hyper': 'Гиперактивность (копание, прыгучесть и тд)',
+         'anxiety': 'Сепарационная тревога (скулит или воет, когда оставляют одного / уходят)',
+         'tension': 'Подавленное состояние животного без медицинских причин',
+         'agression_people': 'Агрессия ко мне и/или другим людям',
+         'fear': 'Страх других животных / собак',
+         'food': 'Проблемы с пищевым поведением (подбор на улице, сложности дома)',
+         'leash': 'Тянет поводок',
+         'hearing': 'Проблемы с послушанием и командами',
+         'else': 'Другое...'
+         }
+        data['problem'] = ans[callback.data]
+
+        new_kinolog(chat_id=callback.from_user.id, name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'],
                        education=data['education'], other_education=data['other_education'], communities=data['communities'],
                        practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'],
                        other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data['motivation'],
                        work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],
                        punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'],
                        other_activities=data['other_activities'], work_methods=data['work_methods'],
-                       choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=message.text)
+                       choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=ans[callback.data])
         text = 'Спасибо что заполнили анкету!\nЕсли ваш опыт и образование подходят, мы пригласим вас на следующий этап. После этого мы попросим вас прислать вас видео, возможно, с вашего занятия о том, как вы гуляете с собакой или занимаетесь с клиентской собакой.'
-        await bot.send_message(chat_id=message.from_user.id, text=text)
-        await GeneralStates.choose_user.set()
+        await bot.send_message(chat_id=callback.from_user.id, text=text)
+        await GeneralStates.start.set()
 
 def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_message_handler(start_form_kinolog, commands=['form'], state=GeneralStates.kinolog)
@@ -205,3 +227,4 @@ def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_message_handler(form_load_kinolog_choice_importance, state=KinologFormStatesGroup.choice_importance)
     dp.register_message_handler(form_load_kinolog_training_situation, state=KinologFormStatesGroup.training_situation)
     dp.register_message_handler(form_load_kinolog_advise, state=KinologFormStatesGroup.advise)
+    dp.register_callback_query_handler(form_load_kinolog_problem, state=KinologFormStatesGroup.problem)

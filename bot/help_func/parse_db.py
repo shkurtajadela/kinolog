@@ -26,8 +26,10 @@ def parse_kinolog(db_kinolog: tuple):
         'choice_importance': db_kinolog[23],
         'training_situation': db_kinolog[24],
         'advise': db_kinolog[25],
-        'video': db_kinolog[26],
-        'form_status': db_kinolog[27],
+        'problem': db_kinolog[26],
+        'photo': db_kinolog[27],
+        'intro': db_kinolog[28],
+        'form_status': db_kinolog[29]
     }
 
     return kinolog
@@ -65,3 +67,9 @@ def parse_consults(db_consults: list):
     consults = [parse_consult(db_consult=db_consult) for db_consult in db_consults]
 
     return consults
+
+
+def parse_kinologs(db_kinologs: list):
+    kinologs = [parse_kinolog(db_kinolog=db_kinolog) for db_kinolog in db_kinologs]
+
+    return kinologs

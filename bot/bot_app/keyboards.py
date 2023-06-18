@@ -31,10 +31,11 @@ ikbb_problem_leash = InlineKeyboardButton(text='Тянет поводок', call
 ikbb_problem_hearing = InlineKeyboardButton(text='Проблемы с послушанием и командами', callback_data='hearing')
 ikbb_problem_else = InlineKeyboardButton(text='Другое...', callback_data='else')
 
-ikbb_race_1 = InlineKeyboardButton(text='Пород 1', callback_data='breed1')
-ikbb_race_2 = InlineKeyboardButton(text='Пород 2', callback_data='breed2')
-ikbb_race_3 = InlineKeyboardButton(text='Пород 3', callback_data='breed3')
-ikbb_race_else = InlineKeyboardButton(text='Другое...', callback_data='else')
+ikbb_weight_1 = InlineKeyboardButton(text='Мини (до 5 кг)', callback_data='weight1')
+ikbb_weight_2 = InlineKeyboardButton(text='Малый (5-10 кг)', callback_data='weight2')
+ikbb_weight_3 = InlineKeyboardButton(text='Средний (10-20 кг)', callback_data='weight3')
+ikbb_weight_4 = InlineKeyboardButton(text='Большой (20-40 кг)', callback_data='weight3')
+ikbb_weight_5 = InlineKeyboardButton(text='Огромный (40кг+)', callback_data='weight3')
 
 
 ikbb_origin_breeder = InlineKeyboardButton(text='У заводчика', callback_data='breeder')
@@ -43,6 +44,16 @@ ikbb_origin_other_owner = InlineKeyboardButton(text='От другого хоз�
 
 ikbb_disease_no = InlineKeyboardButton(text='Нет', callback_data='no')
 ikbb_disease_yes = InlineKeyboardButton(text='Да', callback_data='yes')
+
+ikbb_kinolog_choose = InlineKeyboardButton(text='Выбрать этого специалиста', callback_data='choose')
+ikbb_kinolog_refuse = InlineKeyboardButton(text='Выбрать другого специалиста', callback_data='refuse')
+
+
+def get_ikb_choose_kinolog() -> InlineKeyboardMarkup:
+    ikb_kinolog = InlineKeyboardMarkup(row_width=1)
+    ikb_kinolog.add(ikbb_kinolog_choose, ikbb_kinolog_refuse)
+    return ikb_kinolog
+
 
 def get_ikb_supervised() -> InlineKeyboardMarkup:
     ikb_supervised = InlineKeyboardMarkup(row_width=1)
@@ -54,10 +65,10 @@ def get_ikb_problem() -> InlineKeyboardMarkup:
     ikb_problem.add(ikbb_problem_agression, ikbb_problem_barking, ikbb_problem_behaviour, ikbb_problem_hyper, ikbb_problem_anxiety, ikbb_problem_tension, ikbb_problem_agression_people, ikbb_problem_fear, ikbb_problem_food, ikbb_problem_leash, ikbb_problem_hearing, ikbb_problem_else)
     return ikb_problem
 
-def get_ikb_breed() -> InlineKeyboardMarkup:
-    ikb_breed = InlineKeyboardMarkup(row_width=1)
-    ikb_breed.add(ikbb_race_1, ikbb_race_2, ikbb_race_3, ikbb_race_else)
-    return ikb_breed
+def get_ikb_weight() -> InlineKeyboardMarkup:
+    ikb_weight = InlineKeyboardMarkup(row_width=1)
+    ikb_weight.add(ikbb_weight_1, ikbb_weight_2, ikbb_weight_3, ikbb_weight_4, ikbb_weight_5)
+    return ikb_weight
 
 def get_ikb_origin() -> InlineKeyboardMarkup:
     ikb_origin = InlineKeyboardMarkup(row_width=1)

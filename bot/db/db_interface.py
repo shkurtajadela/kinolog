@@ -1,14 +1,14 @@
 from datetime import datetime
 from bot.db import sqlite
 from bot.help_func.help_func import get_date
-from bot.help_func.parse_db import parse_dog, parse_kinolog, parse_consult, parse_consults
+from bot.help_func.parse_db import parse_dog, parse_kinolog, parse_consult, parse_consults, parse_kinologs
 
 
 def new_kinolog(chat_id: int, name: str, surname: str, patronymic: str, birthday: str, email: str,
                 education: str, other_education: str, communities: str, practice_date: str, online_work: str,
                 supervised: str, other_interests: str, kinolog_site: str, motivation: str, work_stages: str,
                 dog_teaching: str, influenced_by: str, punishment: str, punishment_effect: str, ammunition: str,
-                other_activities: str, work_methods: str, choice_importance: str, training_situation: str, advise: str):
+                other_activities: str, work_methods: str, choice_importance: str, training_situation: str, advise: str, problem: str):
     sqlite.new_kinolog(chat_id=chat_id, name=name, surname=surname, patronymic=patronymic, birthday=birthday, email=email,
                        education=education, other_education=other_education, communities=communities,
                        practice_date=practice_date, online_work=online_work, supervised=supervised,
@@ -16,7 +16,7 @@ def new_kinolog(chat_id: int, name: str, surname: str, patronymic: str, birthday
                        work_stages=work_stages, dog_teaching=dog_teaching, influenced_by=influenced_by,
                        punishment=punishment, punishment_effect=punishment_effect, ammunition=ammunition,
                        other_activities=other_activities, work_methods=work_methods,
-                       choice_importance=choice_importance, training_situation=training_situation, advise=advise)
+                       choice_importance=choice_importance, training_situation=training_situation, advise=advise, problem=problem)
 
 
 def new_dog(chat_id: int, problem: str, age:str, breed: str, weight: int, origin: str, living_together: str,
@@ -35,6 +35,13 @@ def get_kinolog(kinolog_id: int):
     kinolog = parse_kinolog(db_kinolog=db_kinolog)
 
     return kinolog
+
+
+def get_kinologs_by_problem(problem: str):
+    db_kinolog = sqlite.get_kinolog_by_dog_problem(problem=problem)
+    kinologs = parse_kinologs(db_kinolog=db_kinolog)
+
+    return kinologs
 
 
 def new_consults_empty(kinolog_id: int, consult_date: str):

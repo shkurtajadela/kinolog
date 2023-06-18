@@ -31,8 +31,8 @@ async def callback_user_type(callback: types.CallbackQuery, state: FSMContext):
 
 
 def register_main_handlers(dp: Dispatcher) -> None:
-    dp.register_message_handler(send_welcome, commands=['start'])
-    dp.register_message_handler(send_help, commands=['help'])
-    dp.register_message_handler(send_registration, commands=['registration'])
+    dp.register_message_handler(send_welcome, commands=['start'], state='*')
+    dp.register_message_handler(send_help, commands=['help'], state='*')
+    dp.register_message_handler(send_registration, commands=['registration'], state='*')
     dp.register_callback_query_handler(callback_user_type, state=GeneralStates.choose_user)
     

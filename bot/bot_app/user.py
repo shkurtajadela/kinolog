@@ -2,8 +2,8 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from .states import GeneralStates, DogFormStatesGroup
 from .app import dp , bot
-from .keyboards import get_ikb_problem, get_ikb_breed, get_ikb_origin, get_ikb_disease
-from bot.db.db_interface import new_dog
+from .keyboards import get_ikb_problem, get_ikb_weight, get_ikb_origin, get_ikb_disease, get_ikb_choose_kinolog
+from bot.db.db_interface import new_dog, get_kinologs_by_problem
 
 
 async def start_form_dog(message:types.Message):
@@ -39,37 +39,32 @@ async def dog_form_load_age(message:types.Message, state:FSMContext):
         data['age'] = message.text
 
         text = 'Порода собаки?'
-        reply_markup = get_ikb_breed()
+        await bot.send_message(chat_id=message.from_user.id, text=text)
+        await DogFormStatesGroup.next()
+
+async def dog_form_load_breed(message:types.Message, state:FSMContext):
+    async with state.proxy() as data:
+        data['breed'] = message.text
+
+        text = 'Выберите вес собаки? (кг)'
+        reply_markup  = get_ikb_weight()
         await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
         await DogFormStatesGroup.next()
 
-async def dog_form_load_breed(callback:types.CallbackQuery, state:FSMContext):
+async def dog_form_load_weight(callback:types.CallbackQuery, state:FSMContext):
     async with state.proxy() as data:
-        data['breed'] = callback.data
+        ans = {'weight1': 'Мини (до 5 кг)',
+         'weight2': 'Малый (5-10 кг)',
+         'weight3': 'Средний (10-20 кг)',
+         'weight4': 'Большой (20-40 кг)',
+         'weight5': 'Огромный (40кг+)'
+         }
+        data['weight'] = ans[callback.data]
 
-        if callback.data == 'else':
-            text = 'Вес собаки? (кг)'
-            await bot.send_message(chat_id=callback.from_user.id, text=text)
-            await DogFormStatesGroup.next()
-        else:
-            data['weight'] = None
-            text = 'Откуда вы взяли собаку?'
-            reply_markup = get_ikb_origin()
-            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
-            await DogFormStatesGroup.origin.set()
-
-async def dog_form_load_weight(message:types.Message, state:FSMContext):
-    async with state.proxy() as data:
-        if not message.text.isdigit():
-            text = 'Вес должен быть числом. Пожалуйсте напишите его еще раз:'
-            await bot.send_message(chat_id=message.from_user.id, text=text)
-        else:
-            data['weight'] = int(message.text)
-
-            text = 'Откуда вы взяли собаку?'
-            reply_markup = get_ikb_origin()
-            await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
-            await DogFormStatesGroup.next()
+        text = 'Откуда вы взяли собаку?'
+        reply_markup = get_ikb_origin()
+        await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
+        await DogFormStatesGroup.next()
 
 async def dog_form_load_origin(callback:types.CallbackQuery, state:FSMContext):
     async with state.proxy() as data:
@@ -78,7 +73,7 @@ async def dog_form_load_origin(callback:types.CallbackQuery, state:FSMContext):
             'street': 'Из приюта / с улицы',
             'other_owner': 'От другого хозяина, который отдавал собаку'
         }
-        
+
         data['origin'] = ans[callback.data]
         text = 'Как давно собака живет с вами'
         await bot.send_message(chat_id=callback.from_user.id, text=text)
@@ -115,17 +110,43 @@ async def dog_form_load_diseases_list(message:types.Message, state:FSMContext):
         new_dog(chat_id=message.from_user.id, problem=data['problem'], age=data['age'], 
                     breed=data['breed'], weight=data['weight'], origin=data['origin'], living_together=data['living_together'],
                    diseases=message.text)
-        text = 'Спасибо что заполнили анкету.'
-        await bot.send_message(chat_id=message.from_user.id, text=text)
-        await GeneralStates.choose_user.set()
+        text = 'Спасибо, что заполнили анкету.\n\n'
+        kinologs = get_kinologs_by_problem(data['problem'])
+
+        text += f"Под ваш запрос подходит следующий специалист: \n"
+        text +=  f"ФИО: {kinologs[0]['surname']} {kinologs[0]['name']} {kinologs[0]['patronymic']}\n"
+        text += f"Образование: {kinologs[0]['education']}\n"
+
+        reply_markup = get_ikb_choose_kinolog()
+        await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
+        await DogFormStatesGroup.next()
+
+
+async def dog_form_load_diseases(callback:types.CallbackQuery, state:FSMContext):
+    async with state.proxy() as data:
+        if callback.data == 'choose':
+            new_dog(chat_id=callback.from_user.id, problem=data['problem'], age=data['age'], 
+                    breed=data['breed'], weight=data['weight'], origin=data['origin'], living_together=data['living_together'],
+                   diseases='нет')
+
+            text = 'Кинолог выбран.\nНажимайте кнопку перейти чтобы перейти к чату с кинологом и менеджером'
+            await bot.send_message(chat_id=callback.from_user.id, text=text)
+            await GeneralStates.choose_user.set()
+        elif callback.data == 'refuse':
+            text = 'Другой подходящий специалист под ваш запрос это:\n'
+            kinologs = get_kinologs_by_problem(data['problem'])
+            text +=  f"ФИО: {kinologs[1]['surname']} {kinologs[0]['name']} {kinologs[1]['patronymic']}\n"
+            text += f"Образование: {kinologs[1]['education']}\n"
+            reply_markup = get_ikb_choose_kinolog()
+            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
 
 
 def register_main_handlers_user(dp: Dispatcher) -> None:
     dp.register_message_handler(start_form_dog, commands=['dogform'], state=GeneralStates.user)
     dp.register_callback_query_handler(dog_form_load_problem, state=DogFormStatesGroup.problem)
     dp.register_message_handler(dog_form_load_age, state=DogFormStatesGroup.age)
-    dp.register_callback_query_handler(dog_form_load_breed, state=DogFormStatesGroup.breed)
-    dp.register_message_handler(dog_form_load_weight, state=DogFormStatesGroup.weight)
+    dp.register_message_handler(dog_form_load_breed, state=DogFormStatesGroup.breed)
+    dp.register_callback_query_handler(dog_form_load_weight, state=DogFormStatesGroup.weight)
     dp.register_callback_query_handler(dog_form_load_origin, state=DogFormStatesGroup.origin)
     dp.register_message_handler(dog_form_load_living_together, state=DogFormStatesGroup.living_together)
     dp.register_callback_query_handler(dog_form_load_diseases, state=DogFormStatesGroup.diseases)

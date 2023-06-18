@@ -33,6 +33,7 @@ class KinologFormStatesGroup(StatesGroup):
     choice_importance = State()
     training_situation = State()
     advise = State()
+    problem = State()
 
 
 class MainMenuStatesGroup(StatesGroup):
@@ -52,4 +53,5 @@ class DogFormStatesGroup(StatesGroup):
     living_together = State() 
     diseases = State()
     diseases_list = State()
+    kinolog_choose = State()
     
