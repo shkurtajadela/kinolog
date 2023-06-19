@@ -38,8 +38,8 @@ def get_kinolog(kinolog_id: int):
 
 
 def get_kinologs_by_problem(problem: str):
-    db_kinolog = sqlite.get_kinolog_by_dog_problem(problem=problem)
-    kinologs = parse_kinologs(db_kinolog=db_kinolog)
+    db_kinologs = sqlite.get_kinolog_by_dog_problem(problem=problem)
+    kinologs = parse_kinologs(db_kinologs=db_kinologs)
 
     return kinologs
 

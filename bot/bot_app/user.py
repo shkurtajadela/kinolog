@@ -2,7 +2,7 @@ from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from .states import GeneralStates, DogFormStatesGroup
 from .app import dp , bot
-from .keyboards import get_ikb_problem, get_ikb_weight, get_ikb_origin, get_ikb_disease, get_ikb_choose_kinolog
+from .keyboards import get_ikb_problem, get_ikb_weight, get_ikb_origin, get_ikb_disease, get_ikb_choose_kinolog, get_ikb_choose_kinolog_back, get_ikb_choose_kinolog_with_back
 from bot.db.db_interface import new_dog, get_kinologs_by_problem
 
 
@@ -95,9 +95,20 @@ async def dog_form_load_diseases(callback:types.CallbackQuery, state:FSMContext)
                     breed=data['breed'], weight=data['weight'], origin=data['origin'], living_together=data['living_together'],
                    diseases='нет')
 
-            text = 'Спасибо что заполнили анкету.'
-            await bot.send_message(chat_id=callback.from_user.id, text=text)
-            await GeneralStates.choose_user.set()
+            text = 'Спасибо что заполнили анкету.\n\n'
+            kinologs = get_kinologs_by_problem(data['problem'])
+            if len(kinologs) > 0:
+                text += f"Под ваш запрос подходит следующий специалист: \n"
+                text +=  f"ФИО: {kinologs[0]['surname']} {kinologs[0]['name']} {kinologs[0]['patronymic']}\n"
+                text += f"Образование: {kinologs[0]['education']}\n"
+
+                reply_markup = get_ikb_choose_kinolog()
+                await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
+                await DogFormStatesGroup.kinolog_choose.set()
+            else:
+                text += f"К сожалению, под ваш запрос не подходит ни одного специалист! \n"
+                await bot.send_message(chat_id=callback.from_user.id, text=text)
+                await GeneralStates.choose_user.set()
         elif callback.data == 'yes':
             text = 'Какие? Впишите?'
             await bot.send_message(chat_id=callback.from_user.id, text=text)
@@ -113,31 +124,50 @@ async def dog_form_load_diseases_list(message:types.Message, state:FSMContext):
         text = 'Спасибо, что заполнили анкету.\n\n'
         kinologs = get_kinologs_by_problem(data['problem'])
 
-        text += f"Под ваш запрос подходит следующий специалист: \n"
-        text +=  f"ФИО: {kinologs[0]['surname']} {kinologs[0]['name']} {kinologs[0]['patronymic']}\n"
-        text += f"Образование: {kinologs[0]['education']}\n"
+        if len(kinologs) > 0:
+            text += f"Под ваш запрос подходит следующий специалист: \n"
+            text +=  f"ФИО: {kinologs[0]['surname']} {kinologs[0]['name']} {kinologs[0]['patronymic']}\n"
+            text += f"Образование: {kinologs[0]['education']}\n"
+            data['kinolog'] = 1
 
-        reply_markup = get_ikb_choose_kinolog()
-        await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
-        await DogFormStatesGroup.next()
+            reply_markup = get_ikb_choose_kinolog()
+            await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
+            await DogFormStatesGroup.next()
+        
+        else:
+            text += f"К сожалению, под ваш запрос не подходит ни одного специалист! \n"
+            await bot.send_message(chat_id=message.from_user.id, text=text)
+            await GeneralStates.choose_user.set()
 
-
-async def dog_form_load_diseases(callback:types.CallbackQuery, state:FSMContext):
+async def dog_form_load_kinolog_choose(callback:types.CallbackQuery, state:FSMContext):
     async with state.proxy() as data:
         if callback.data == 'choose':
-            new_dog(chat_id=callback.from_user.id, problem=data['problem'], age=data['age'], 
-                    breed=data['breed'], weight=data['weight'], origin=data['origin'], living_together=data['living_together'],
-                   diseases='нет')
 
             text = 'Кинолог выбран.\nНажимайте кнопку перейти чтобы перейти к чату с кинологом и менеджером'
             await bot.send_message(chat_id=callback.from_user.id, text=text)
             await GeneralStates.choose_user.set()
         elif callback.data == 'refuse':
+            kinologs = get_kinologs_by_problem(data['problem'])
+            if len(kinologs) > data['kinolog']:
+                text = 'Другой подходящий специалист под ваш запрос это:\n'
+                kinologs = get_kinologs_by_problem(data['problem'])
+                text +=  f"ФИО: {kinologs[data['kinolog']]['surname']} {kinologs[data['kinolog']]['name']} {kinologs[data['kinolog']]['patronymic']}\n"
+                text += f"Образование: {kinologs[data['kinolog']]['education']}\n"
+                data['kinolog'] += 1
+                reply_markup = get_ikb_choose_kinolog_with_back()
+                await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
+            else:
+                text = 'К сожалению, у нас больше подходящих специалистов под ваш запрос нет!\n'
+                reply_markup = get_ikb_choose_kinolog_back()
+                await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
+        elif callback.data == 'back':
             text = 'Другой подходящий специалист под ваш запрос это:\n'
             kinologs = get_kinologs_by_problem(data['problem'])
-            text +=  f"ФИО: {kinologs[1]['surname']} {kinologs[0]['name']} {kinologs[1]['patronymic']}\n"
-            text += f"Образование: {kinologs[1]['education']}\n"
-            reply_markup = get_ikb_choose_kinolog()
+            data['kinolog'] -= 1
+
+            text +=  f"ФИО: {kinologs[data['kinolog']]['surname']} {kinologs[data['kinolog']]['name']} {kinologs[data['kinolog']]['patronymic']}\n"
+            text += f"Образование: {kinologs[data['kinolog']]['education']}\n"
+            reply_markup = get_ikb_choose_kinolog_with_back() if data['kinolog'] != 1 else get_ikb_choose_kinolog()
             await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
 
 
@@ -151,3 +181,4 @@ def register_main_handlers_user(dp: Dispatcher) -> None:
     dp.register_message_handler(dog_form_load_living_together, state=DogFormStatesGroup.living_together)
     dp.register_callback_query_handler(dog_form_load_diseases, state=DogFormStatesGroup.diseases)
     dp.register_message_handler(dog_form_load_diseases_list, state=DogFormStatesGroup.diseases_list)
+    dp.register_callback_query_handler(dog_form_load_kinolog_choose, state=DogFormStatesGroup.kinolog_choose)

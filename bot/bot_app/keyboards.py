@@ -47,11 +47,22 @@ ikbb_disease_yes = InlineKeyboardButton(text='Да', callback_data='yes')
 
 ikbb_kinolog_choose = InlineKeyboardButton(text='Выбрать этого специалиста', callback_data='choose')
 ikbb_kinolog_refuse = InlineKeyboardButton(text='Выбрать другого специалиста', callback_data='refuse')
+ikbb_kinolog_back = InlineKeyboardButton(text='Вернуться назад', callback_data='back')
 
 
 def get_ikb_choose_kinolog() -> InlineKeyboardMarkup:
     ikb_kinolog = InlineKeyboardMarkup(row_width=1)
     ikb_kinolog.add(ikbb_kinolog_choose, ikbb_kinolog_refuse)
+    return ikb_kinolog
+
+def get_ikb_choose_kinolog_with_back() -> InlineKeyboardMarkup:
+    ikb_kinolog = InlineKeyboardMarkup(row_width=1)
+    ikb_kinolog.add(ikbb_kinolog_choose, ikbb_kinolog_refuse, ikbb_kinolog_back)
+    return ikb_kinolog
+
+def get_ikb_choose_kinolog_back() -> InlineKeyboardMarkup:
+    ikb_kinolog = InlineKeyboardMarkup(row_width=1)
+    ikb_kinolog.add(ikbb_kinolog_back)
     return ikb_kinolog
 
 
