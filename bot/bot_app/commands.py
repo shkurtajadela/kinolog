@@ -21,7 +21,7 @@ async def send_registration(message:types.Message):
 
 async def callback_user_type(callback: types.CallbackQuery, state: FSMContext):
     if callback.data == 'kinolog':
-        text = 'Welcome to kinolog interface! If you are a new kinolog, go to /form!'
+        text = 'Welcome to kinolog interface! If you are a new kinolog, go to /form or \n/selected!'
         await bot.send_message(chat_id=callback.from_user.id, text=text)
         await GeneralStates.kinolog.set()
     elif callback.data == 'user':

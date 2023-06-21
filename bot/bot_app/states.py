@@ -34,6 +34,8 @@ class KinologFormStatesGroup(StatesGroup):
     training_situation = State()
     advise = State()
     problem = State()
+    photo = State()
+    intro = State()
 
 
 class MainMenuStatesGroup(StatesGroup):

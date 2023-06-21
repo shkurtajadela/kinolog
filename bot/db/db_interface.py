@@ -18,6 +18,8 @@ def new_kinolog(chat_id: int, name: str, surname: str, patronymic: str, birthday
                        other_activities=other_activities, work_methods=work_methods,
                        choice_importance=choice_importance, training_situation=training_situation, advise=advise, problem=problem)
 
+def update_kinolog_card(kinolog_id:int, photo:str, intro:str):
+    sqlite.update_card(kinolog_id=kinolog_id,photo=photo, intro=intro)
 
 def new_dog(chat_id: int, problem: str, age:str, breed: str, weight: int, origin: str, living_together: str,
             diseases: str):
@@ -42,6 +44,12 @@ def get_kinologs_by_problem(problem: str):
     kinologs = parse_kinologs(db_kinologs=db_kinologs)
 
     return kinologs
+
+def get_form_status(kinolog_id:int, form_status:str):
+    db_kinolog = sqlite.get_form_status(kinolog_id=kinolog_id, form_status=form_status)
+    status = parse_kinolog(db_kinolog=db_kinolog)
+
+    return status
 
 
 def new_consults_empty(kinolog_id: int, consult_date: str):

@@ -4,15 +4,20 @@ from .app import dp, bot
 from .keyboards import get_ikb_supervised, get_ikb_problem
 from aiogram import types, Dispatcher
 from .states import KinologFormStatesGroup, GeneralStates
-from bot.db.db_interface import new_kinolog
+from bot.db.db_interface import new_kinolog, update_kinolog_card, get_form_status
 from datetime import datetime
 from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 from datetime import date
 
 async def start_form_kinolog(message:types.Message):
-    text = "Напишите ваше имя:"
-    await bot.send_message(chat_id=message.from_user.id, text=text)
-    await KinologFormStatesGroup.name.set()
+    if get_form_status[1]=='selected':
+        text="Ваша заявка одобрена. Загрузите фотографию"
+        photo_info=message.photo
+        await bot.send_message(chat_id=message.from_user.id, text=text)
+    else:
+        text = "Напишите ваше имя:"
+        await bot.send_message(chat_id=message.from_user.id, text=text)
+        await KinologFormStatesGroup.name.set()
 
 async def form_load(message:types.Message, state:FSMContext, field: str, text: str):
     async with state.proxy() as data:
@@ -200,6 +205,24 @@ async def form_load_kinolog_problem(callback:types.CallbackQuery, state:FSMConte
         await bot.send_message(chat_id=callback.from_user.id, text=text)
         await GeneralStates.start.set()
 
+async def start_card_kinolog(message:types.Message, state:FSMContext):
+    text = "Ваше заявка одобрена. Загрузите фото"
+    # photo_id=bot.get_file(message)
+    await bot.send_message(chat_id=message.from_user.id, text=text)
+    await KinologFormStatesGroup.photo.set()
+
+async def card_load_photo(message:types.Message, state:FSMContext):
+    photo_id=message.text
+    await form_load(message, state, 'photo','')
+
+async def card_load_intro(message:types.Message, state:FSMContext):
+    async with state.proxy() as data:
+        data['intro'] = message.text
+        update_kinolog_card(kinolog_id=message.from_user.id, photo=data['photo'], intro=message.text)
+        text = "карточка заполнена"
+        await bot.send_message(chat_id=message.from_user.id, text=text)
+
+
 def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_message_handler(start_form_kinolog, commands=['form'], state=GeneralStates.kinolog)
     dp.register_message_handler(form_load_kinolog_name, state=KinologFormStatesGroup.name)
@@ -228,3 +251,7 @@ def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_message_handler(form_load_kinolog_training_situation, state=KinologFormStatesGroup.training_situation)
     dp.register_message_handler(form_load_kinolog_advise, state=KinologFormStatesGroup.advise)
     dp.register_callback_query_handler(form_load_kinolog_problem, state=KinologFormStatesGroup.problem)
+
+    dp.register_message_handler(start_card_kinolog, commands=['selected'], state=GeneralStates.kinolog)
+    dp.register_callback_query_handler(card_load_photo, state=KinologFormStatesGroup.photo)
+    dp.register_callback_query_handler(card_load_intro, state=KinologFormStatesGroup.intro)

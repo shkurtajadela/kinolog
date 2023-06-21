@@ -49,6 +49,14 @@ def update_video(kinolog_id: int, video: str):
     cur.execute(f"UPDATE Kinolog SET video = '{video}' WHERE kinolog_id == '{kinolog_id}'")
     db.commit()
 
+def update_card(kinolog_id: int, photo: str, intro:str):
+    cur.execute(f"UPDATE Kinolog SET photo = '{photo}' AND intro = '{intro}' WHERE kinolog_id == '{kinolog_id}'")
+    db.commit()
+
+def get_form_status(kinolog_id: int, form_status: str):
+    value = cur.execute(f"SELECT * FROM Kinolog WHERE kinolog_id == {kinolog_id} AND form_status = '{form_status}").fetchall()
+    return value
+
 
 def get_consults_by_kinolog(kinolog_id: int):
     value = cur.execute(f"SELECT * FROM Consultation WHERE kinolog_id == {kinolog_id}").fetchall()
