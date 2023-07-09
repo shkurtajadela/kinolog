@@ -1,7 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 from .app import dp, bot
-from .keyboards import get_ikb_supervised, get_ikb_problem, get_ikb_choose_kinolog_back, get_ikb_registration, get_ikb_send_card 
+from .keyboards import get_ikb_supervised, get_ikb_problem, get_ikb_choose_kinolog_back, get_ikb_registration, get_ikb_send_card, get_ikb_kinolog_card
 from aiogram import types, Dispatcher
 from .states import KinologFormStatesGroup, GeneralStates
 from bot.db.db_interface import new_kinolog, update_kinolog_card, get_form_status, get_kinolog
@@ -10,25 +10,30 @@ from telegram_bot_calendar import DetailedTelegramCalendar, LSTEP
 from datetime import date
 
 async def start_form_kinolog(callback:types.CallbackQuery, state:FSMContext):
-    await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
-    if callback.data == "card":
-        text="Загрузите ваше фото"
-        await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_choose_kinolog_back())
-        await KinologFormStatesGroup.photo.set()
-    elif callback.data == "form":
-        text = "Напишите ваше имя:"
-        await bot.send_message(chat_id=callback.from_user.id, text=text)
-        await KinologFormStatesGroup.name.set()
-    elif callback.data == "back":
-        welcome_msg = "Привет! Это бот для заполнения анкеты кинологом или поиска кинолога владельцем собаки. \nЕсли хотите зарегистрироваться, то нажимайте кнопку ниже"
-        await bot.send_message(chat_id=callback.from_user.id, text=welcome_msg, reply_markup=get_ikb_registration())
-        await GeneralStates.registration.set()
+    async with state.proxy() as data:
+        await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+        if callback.data == "card":
+            text="Загрузите ваше фото"
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_choose_kinolog_back())
+            data['msg_id'] = msg.message_id
+            await KinologFormStatesGroup.photo.set()
+        elif callback.data == "form":
+            text = "Напишите ваше имя:"
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text)
+            data['msg_id'] = msg.message_id
+            await KinologFormStatesGroup.name.set()
+        elif callback.data == "back":
+            welcome_msg = "Привет! Это бот для заполнения анкеты кинологом или поиска кинолога владельцем собаки. \nЕсли хотите зарегистрироваться, то нажимайте кнопку ниже"
+            await bot.send_message(chat_id=callback.from_user.id, text=welcome_msg, reply_markup=get_ikb_registration())
+            await GeneralStates.registration.set()
 
 async def form_load(message:types.Message, state:FSMContext, field: str, text: str):
+    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+
     async with state.proxy() as data:
         data[field] = message.text
 
-        await bot.send_message(chat_id=message.from_user.id, text=text)
+        await bot.edit_message_text(chat_id=message.from_user.id, text=text, message_id=data['msg_id'])
         await KinologFormStatesGroup.next()
 
 async def form_load_kinolog_name(message:types.Message, state:FSMContext):
@@ -38,12 +43,13 @@ async def form_load_kinolog_surname(message:types.Message, state:FSMContext):
     await form_load(message, state, 'surname', 'Напишите ваше отчество:')
 
 async def form_load_kinolog_patronymic(message:types.Message, state:FSMContext):
+    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
     async with state.proxy() as data:
         data['patronymic'] = message.text
 
         calendar, step = DetailedTelegramCalendar(max_date=date(2022,1,1)).build()
-        await bot.send_message(message.from_user.id,
-                     f"Выберите день рождения: {LSTEP[step]}",
+        await bot.edit_message_text(chat_id=message.from_user.id,text=
+                     f"Выберите день рождения: {LSTEP[step]}", message_id=data['msg_id'],
                      reply_markup=calendar)
         await KinologFormStatesGroup.next()
 
@@ -59,7 +65,7 @@ async def form_load_kinolog_birthday(callback:types.CallbackQuery, state:FSMCont
             data['birthday'] = result
         
             text = 'Write your email?'
-            await bot.send_message(chat_id=callback.from_user.id, text=text)
+            await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=data['msg_id'])
             await KinologFormStatesGroup.next()
 
         
@@ -89,6 +95,7 @@ async def form_load_kinolog_practice_date(message:types.Message, state:FSMContex
 
 
 async def form_load_kinolog_online_work(message:types.Message, state:FSMContext):
+    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
     async with state.proxy() as data:
         data['online_work'] = message.text
 
@@ -99,6 +106,7 @@ async def form_load_kinolog_online_work(message:types.Message, state:FSMContext)
 
 
 async def form_load_kinolog_supervised(callback:types.CallbackQuery, state:FSMContext):
+    await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
     async with state.proxy() as data:
         ans = {'no_supervised': 'Нет, никогда не проходил(а)',
          'before_supervised': 'Да, проходил(а) когда-то, сейчас не прохожу',
@@ -108,7 +116,7 @@ async def form_load_kinolog_supervised(callback:types.CallbackQuery, state:FSMCo
         data['supervised'] = ans[callback.data]
 
         text = 'Есть ли другая работа кроме специалиста по поведению собак? Как распределяются интересы и приоритеты?'
-        await bot.send_message(chat_id=callback.from_user.id, text=text)
+        await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=data['msg_id'])
         await KinologFormStatesGroup.next()
 
 
@@ -173,15 +181,17 @@ async def form_load_kinolog_training_situation(message:types.Message, state:FSMC
     await form_load(message, state, 'training_situation', text)
 
 async def form_load_kinolog_advise(message:types.Message, state:FSMContext):
+    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
     async with state.proxy() as data:
         data['advise'] = message.text
 
         text = "Какие проблемы собаки вы бы хотели решать?"
         reply_markup  = get_ikb_problem()
-        await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
+        await bot.edit_message_text(chat_id=message.from_user.id, text=text, reply_markup=reply_markup, message_id=data['msg_id'])
         await KinologFormStatesGroup.next()
 
 async def form_load_kinolog_problem(callback:types.CallbackQuery, state:FSMContext):
+    await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
     async with state.proxy() as data:
         ans = {'agression': 'Агрессия по отношению к другим собакам/животным',
          'barking': 'Лай на звуки/дверь и тревожность дома',
@@ -206,34 +216,49 @@ async def form_load_kinolog_problem(callback:types.CallbackQuery, state:FSMConte
                        punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'],
                        other_activities=data['other_activities'], work_methods=data['work_methods'],
                        choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=ans[callback.data])
-        text = 'Спасибо что заполнили анкету!\nЕсли ваш опыт и образование подходят, мы пригласим вас на следующий этап. После этого мы попросим вас прислать вас видео, возможно, с вашего занятия о том, как вы гуляете с собакой или занимаетесь с клиентской собакой.'
+        text = 'Спасибо, что заполнили анкету!\nЕсли ваш опыт и образование подходят, мы пригласим вас на следующий этап. После этого мы попросим вас прислать вас видео, возможно, с вашего занятия о том, как вы гуляете с собакой или занимаетесь с клиентской собакой.\nНажимайте /start чтобы снова начинать'
         await bot.send_message(chat_id=callback.from_user.id, text=text)
         await GeneralStates.start.set()
 
-async def card_load_photo(message:types.Message, state:FSMContext, callback:types.CallbackQuery = None):
+# async def card_load_photo(state:FSMContext, message:types.Message = None, callback:types.CallbackQuery = None):
+#     if callback != None and callback.data == "back":
+#         await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.message_id)
+#         text = 'Это интерфейс одобренного кинолога. \nЧто вы хотите делать дальше:'
+#         await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_kinolog_card())
+#         await GeneralStates.kinolog.set()
+#     elif message.photo[0].file_id:
+#         await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
+#         async with state.proxy() as data:
+#             data['photo'] = message.photo[0].file_id
 
-    if callback and callback.data != "back":
-        await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+#             text = 'Расскажите немного о себе, чтобы потенциальные клиенты лучше могли вас узнать:'
+#             await bot.send_message(chat_id=message.from_user.id, text=text)
+#             await KinologFormStatesGroup.next()
 
-        welcome_msg = "Привет! Это бот для заполнения анкеты кинологом или поиска кинолога владельцем собаки. \nЕсли хотите зарегистрироваться, то нажимайте кнопку ниже"
-        await bot.send_message(chat_id=callback.from_user.id, text=welcome_msg, reply_markup=get_ikb_registration())
-        await GeneralStates.registration.set()
-    elif message.photo[0].file_id:
+async def card_load_photo_callback_query(callback: types.CallbackQuery, state: FSMContext):
+    if callback.data == "back":
+        await bot.delete_message(chat_id=callback.message.chat.id, message_id=callback.message.message_id)
+        text = 'Это интерфейс одобренного кинолога. \nЧто вы хотите делать дальше:'
+        await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_kinolog_card())
+        await GeneralStates.kinolog.set()
+
+async def card_load_photo_message(message: types.Message, state: FSMContext):
+    if message.photo[0].file_id:
         await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
         async with state.proxy() as data:
             data['photo'] = message.photo[0].file_id
 
             text = 'Расскажите немного о себе, чтобы потенциальные клиенты лучше могли вас узнать:'
-            await bot.send_message(chat_id=message.from_user.id, text=text)
-            await KinologFormStatesGroup.next()
-        
+            await bot.edit_message_text(chat_id=message.from_user.id, text=text, message_id=data['msg_id'])
+            await KinologFormStatesGroup.intro.set()
 
 async def card_load_intro(message:types.Message, state:FSMContext):
     async with state.proxy() as data:
         data['intro'] = message.text
 
+        await bot.delete_message(chat_id=message.from_user.id, message_id=data['msg_id'])
         await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
-        await bot.send_photo(photo=data['photo'], chat_id=message.from_id, caption=data['intro'], reply_markup=get_ikb_send_card())
+        await bot.send_photo(photo=data['photo'], chat_id=message.from_user.id, caption=data['intro'], reply_markup=get_ikb_send_card())
         await KinologFormStatesGroup.next()
 
 
@@ -242,14 +267,20 @@ async def card_load_confirm(callback:types.CallbackQuery, state:FSMContext):
         if callback.data == "send":
             await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
             update_kinolog_card(chat_id=callback.from_user.id, photo=data['photo'], intro=data['intro'])
-            text = "Спасибо, что заполнили карту! "
+            text = "Спасибо, что заполнили карту! \nНапишите /start чтобы начинать работать снова с ботом"
             await bot.send_message(chat_id=callback.from_user.id, text=text)
         elif callback.data == "back":
             await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
             text = 'Расскажите немного о себе, чтобы потенциальные клиенты лучше могли вас узнать:'
-            await bot.send_message(chat_id=callback.from_user.id, text=text)
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text)
+            data['msg_id'] = msg.message_id
             await KinologFormStatesGroup.intro.set()
-
+        elif callback.data == "go_to_start":
+            await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+            welcome_msg = "Привет! Это бот для заполнения анкеты кинологом или поиска кинолога владельцем собаки. \nЕсли хотите зарегистрироваться, то нажимайте кнопку ниже"
+            await bot.send_message(chat_id=callback.from_user.id, text=welcome_msg, reply_markup=get_ikb_registration())
+            await GeneralStates.registration.set()
+    
 
 def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(start_form_kinolog, state=GeneralStates.kinolog)
@@ -279,6 +310,7 @@ def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_message_handler(form_load_kinolog_training_situation, state=KinologFormStatesGroup.training_situation)
     dp.register_message_handler(form_load_kinolog_advise, state=KinologFormStatesGroup.advise)
     dp.register_callback_query_handler(form_load_kinolog_problem, state=KinologFormStatesGroup.problem)
-    dp.register_message_handler(card_load_photo, state=KinologFormStatesGroup.photo, content_types=types.ContentType.PHOTO)
+    dp.register_message_handler(card_load_photo_message, state=KinologFormStatesGroup.photo, content_types=types.ContentType.PHOTO)
+    dp.register_callback_query_handler(card_load_photo_callback_query, state=KinologFormStatesGroup.photo)
     dp.register_message_handler(card_load_intro, state=KinologFormStatesGroup.intro)
     dp.register_callback_query_handler(card_load_confirm, state=KinologFormStatesGroup.card_confirm)

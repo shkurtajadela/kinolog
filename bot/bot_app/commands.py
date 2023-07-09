@@ -54,7 +54,6 @@ async def callback_load_interface(callback: types.CallbackQuery, state: FSMConte
 def register_main_handlers(dp: Dispatcher) -> None:
     dp.register_message_handler(send_welcome, commands=['start'], state='*')
     dp.register_message_handler(send_help, commands=['help'], state='*')
-    # dp.register_message_handler(send_registration, state=GeneralStates.registration)
     dp.register_callback_query_handler(callback_choose_user_type, state=GeneralStates.registration)
     dp.register_callback_query_handler(callback_load_interface, state=GeneralStates.choose_user)
     

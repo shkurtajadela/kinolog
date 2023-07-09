@@ -61,6 +61,8 @@ ikbb_kinolog_form = InlineKeyboardButton(text='Заполнить анкету',
 ikbb_kinolog_card = InlineKeyboardButton(text='Заполнить карту', callback_data='card')
 
 ikbb_kinolog_send_card = InlineKeyboardButton(text='Отправить карту', callback_data='send')
+ikbb_kinolog_again_card = InlineKeyboardButton(text='Заполнить еще раз карту', callback_data='send')
+ikbb_kinolog_to_start = InlineKeyboardButton(text='Перейти к началу', callback_data='go_to_start')
 
 def get_ikb_chat() -> InlineKeyboardMarkup:
     ikb_chat = InlineKeyboardMarkup(row_width=1)
@@ -92,7 +94,7 @@ def get_ikb_kinolog_card() -> InlineKeyboardMarkup:
 
 def get_ikb_send_card() -> InlineKeyboardMarkup:
     ikb_user = InlineKeyboardMarkup(row_width=1)
-    ikb_user.add(ikbb_kinolog_send_card, ikbb_kinolog_back)
+    ikb_user.add(ikbb_kinolog_send_card, ikbb_kinolog_back, ikbb_kinolog_to_start)
     return ikb_user
 
 def get_ikb_choose_kinolog() -> InlineKeyboardMarkup:
