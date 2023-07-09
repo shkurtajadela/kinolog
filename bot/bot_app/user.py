@@ -1,10 +1,12 @@
+import random
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from .states import GeneralStates, DogFormStatesGroup
 from .app import dp , bot
-from .keyboards import get_ikb_problem, get_ikb_weight, get_ikb_origin, get_ikb_disease, get_ikb_choose_kinolog, get_ikb_choose_kinolog_back, get_ikb_choose_kinolog_with_back
+from .keyboards import get_ikb_problem, get_ikb_weight, get_ikb_origin, get_ikb_disease, get_ikb_choose_kinolog, get_ikb_choose_kinolog_back, get_ikb_choose_kinolog_with_back, get_ikb_chat
 from bot.db.db_interface import new_dog, get_kinologs_by_problem
-
+import pyrogram
+from pyrogram import raw, Client, filters
 
 async def start_form_dog(message:types.Message):
     text = "Что вас беспокоит?"
@@ -101,6 +103,8 @@ async def dog_form_load_diseases(callback:types.CallbackQuery, state:FSMContext)
                 text += f"Под ваш запрос подходит следующий специалист: \n"
                 text +=  f"ФИО: {kinologs[0]['surname']} {kinologs[0]['name']} {kinologs[0]['patronymic']}\n"
                 text += f"Образование: {kinologs[0]['education']}\n"
+                data['kinolog'] = 1
+
 
                 reply_markup = get_ikb_choose_kinolog()
                 await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
@@ -142,10 +146,13 @@ async def dog_form_load_diseases_list(message:types.Message, state:FSMContext):
 async def dog_form_load_kinolog_choose(callback:types.CallbackQuery, state:FSMContext):
     async with state.proxy() as data:
         if callback.data == 'choose':
+            kinolog = get_kinologs_by_problem(data['problem'])[data['kinolog']-1]
 
-            text = 'Кинолог выбран.\nНажимайте кнопку перейти чтобы перейти к чату с кинологом и менеджером'
-            await bot.send_message(chat_id=callback.from_user.id, text=text)
-            await GeneralStates.choose_user.set()
+            data['kinolog_id'] = kinolog['chat_id']
+            text = f"Кинолог выбран.\nНажимайте кнопку перейти чтобы перейти к чату с кинологом и менеджером"
+            reply_markup = get_ikb_chat()
+            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
+            await DogFormStatesGroup.next()
         elif callback.data == 'refuse':
             kinologs = get_kinologs_by_problem(data['problem'])
             if len(kinologs) > data['kinolog']:
@@ -171,6 +178,26 @@ async def dog_form_load_kinolog_choose(callback:types.CallbackQuery, state:FSMCo
             await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
 
 
+async def dog_form_load_chat(callback: types.CallbackQuery, state: FSMContext):
+    async with state.proxy() as data:
+        if callback.data == 'go_to_chat':
+            chat_title = "Group Chat"
+            cynologist_id = data['kinolog_id']
+            app_pyr = Client("WowPet", api_id=27901249, api_hash="4b2bf435fafee0bde22ea278c3090e8e")
+            await app_pyr.start()
+            chat = await app_pyr.create_group(chat_title, callback.from_user.id)
+            link = await app_pyr.create_chat_invite_link(chat_id=chat.id)
+            await bot.send_message(chat_id=cynologist_id, text=f"Go to chat {link.invite_link}")
+            welcome_message = "Welcome to the group!"
+
+            await app_pyr.send_message(chat.id, welcome_message)
+            text = f"Chat создан"
+
+            await bot.send_message(chat_id=callback.from_user.id, text=text)
+            await app_pyr.stop()
+            await GeneralStates.choose_user.set()
+
+
 def register_main_handlers_user(dp: Dispatcher) -> None:
     dp.register_message_handler(start_form_dog, commands=['dogform'], state=GeneralStates.user)
     dp.register_callback_query_handler(dog_form_load_problem, state=DogFormStatesGroup.problem)
@@ -182,3 +209,5 @@ def register_main_handlers_user(dp: Dispatcher) -> None:
     dp.register_callback_query_handler(dog_form_load_diseases, state=DogFormStatesGroup.diseases)
     dp.register_message_handler(dog_form_load_diseases_list, state=DogFormStatesGroup.diseases_list)
     dp.register_callback_query_handler(dog_form_load_kinolog_choose, state=DogFormStatesGroup.kinolog_choose)
+    dp.register_callback_query_handler(dog_form_load_chat, state=DogFormStatesGroup.chat)
+    # dp_pyr.register_callback_query_handler(dog_form_load_chat, state=DogFormStatesGroup.chat)

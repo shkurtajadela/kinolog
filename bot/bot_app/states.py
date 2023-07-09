@@ -2,8 +2,8 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 
 class GeneralStates(StatesGroup):
     start = State()
+    registration = State()
     choose_user = State()
-
     kinolog = State()
     user = State()
 
@@ -36,6 +36,7 @@ class KinologFormStatesGroup(StatesGroup):
     problem = State()
     photo = State()
     intro = State()
+    card_confirm = State()
 
 
 class MainMenuStatesGroup(StatesGroup):
@@ -56,4 +57,5 @@ class DogFormStatesGroup(StatesGroup):
     diseases = State()
     diseases_list = State()
     kinolog_choose = State()
+    chat = State()
     

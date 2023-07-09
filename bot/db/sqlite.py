@@ -45,26 +45,26 @@ def new_dog(chat_id: int, problem: str, age:str, breed: str, weight: int, origin
     db.commit()
 
 
-def update_video(kinolog_id: int, video: str):
-    cur.execute(f"UPDATE Kinolog SET video = '{video}' WHERE kinolog_id == '{kinolog_id}'")
+def update_video(chat_id: int, video: str):
+    cur.execute(f"UPDATE Kinolog SET video = '{video}' WHERE chat_id == '{chat_id}'")
     db.commit()
 
-def update_card(kinolog_id: int, photo: str, intro:str):
-    cur.execute(f"UPDATE Kinolog SET photo = '{photo}' AND intro = '{intro}' WHERE kinolog_id == '{kinolog_id}'")
+def update_card(chat_id: int, photo: str, intro:str):
+    cur.execute(f"UPDATE Kinolog SET photo = '{photo}', intro = '{intro}' WHERE chat_id == '{chat_id}'")
     db.commit()
 
-def get_form_status(kinolog_id: int, form_status: str):
-    value = cur.execute(f"SELECT * FROM Kinolog WHERE kinolog_id == {kinolog_id} AND form_status = '{form_status}").fetchall()
+def get_form_status(chat_id: int):
+    value = cur.execute(f"SELECT * FROM Kinolog WHERE chat_id == {chat_id}").fetchone()
     return value
 
 
-def get_consults_by_kinolog(kinolog_id: int):
-    value = cur.execute(f"SELECT * FROM Consultation WHERE kinolog_id == {kinolog_id}").fetchall()
+def get_consults_by_kinolog(chat_id: int):
+    value = cur.execute(f"SELECT * FROM Consultation WHERE chat_id == {chat_id}").fetchall()
     return value
 
 
-def get_kinolog(kinolog_id: int):
-    value = cur.execute(f"SELECT * FROM Kinolog WHERE kinolog_id == '{kinolog_id}'").fetchone()
+def get_kinolog(chat_id: int):
+    value = cur.execute(f"SELECT * FROM Kinolog WHERE chat_id == '{chat_id}'").fetchone()
     return value
 
 
@@ -73,9 +73,9 @@ def get_dog(dog_id: int):
     return value
 
 
-def new_consul_empty(kinolog_id: int, consult_date: datetime):
+def new_consul_empty(chat_id: int, consult_date: datetime):
     cur.execute("INSERT INTO Consultation VALUES(?, ?, ?, ?, ?, ?)",
-                (None, kinolog_id, 0, 0, consult_date, 0))
+                (None, chat_id, 0, 0, consult_date, 0))
 
     db.commit()
 
@@ -98,8 +98,8 @@ def get_kinolog_by_dog_problem(problem: str):
     return value
 
 
-def get_consults_by_kinolog_and_dog(kinolog_id: int, dog_id: int):
-    value = cur.execute(f"SELECT * FROM Consultation WHERE dog_id == {dog_id} AND kinolog_id == '{kinolog_id}'").fetchone()
+def get_consults_by_kinolog_and_dog(chat_id: int, dog_id: int):
+    value = cur.execute(f"SELECT * FROM Consultation WHERE dog_id == {dog_id} AND chat_id == '{chat_id}'").fetchone()
     return value
 
 
@@ -108,13 +108,13 @@ def delete_consult(consult_id: int):
     db.commit()
 
 
-def delete_consults_kinolog(kinolog_id: int):
-    cur.execute(f"DELETE FROM Consultation WHERE kinolog_id == '{kinolog_id}'")
+def delete_consults_kinolog(chat_id: int):
+    cur.execute(f"DELETE FROM Consultation WHERE chat_id == '{chat_id}'")
     db.commit()
 
 
-def delete_kinolog(kinolog_id: int):
-    cur.execute(f"DELETE FROM Kinolog WHERE kinolog_id == '{kinolog_id}'")
+def delete_kinolog(chat_id: int):
+    cur.execute(f"DELETE FROM Kinolog WHERE chat_id == '{chat_id}'")
     db.commit()
 
 

@@ -6,6 +6,7 @@ inline_kb = InlineKeyboardMarkup()
 
 inline_kb.add(inline_button_kin).add(inline_button_user)
 
+
 kin_q1 = InlineKeyboardButton('answer 1', callback_data='ans1')
 kin_q2 = InlineKeyboardButton('answer 2', callback_data='ans2')
 kin_q3 = InlineKeyboardButton('answer 3', callback_data='ans3')
@@ -49,6 +50,50 @@ ikbb_kinolog_choose = InlineKeyboardButton(text='Выбрать этого сп�
 ikbb_kinolog_refuse = InlineKeyboardButton(text='Выбрать другого специалиста', callback_data='refuse')
 ikbb_kinolog_back = InlineKeyboardButton(text='Вернуться назад', callback_data='back')
 
+ikbb_kinolog_chat = InlineKeyboardButton(text='Перейти к чату', callback_data='go_to_chat')
+
+ikbb_kinolog_registration = InlineKeyboardButton(text='Регистрация', callback_data='registration')
+
+ikbb_kinolog_kinolog = InlineKeyboardButton(text='Кинолог', callback_data='kinolog')
+ikbb_kinolog_user = InlineKeyboardButton(text='Клиент', callback_data='user')
+
+ikbb_kinolog_form = InlineKeyboardButton(text='Заполнить анкету', callback_data='form')
+ikbb_kinolog_card = InlineKeyboardButton(text='Заполнить карту', callback_data='card')
+
+ikbb_kinolog_send_card = InlineKeyboardButton(text='Отправить карту', callback_data='send')
+
+def get_ikb_chat() -> InlineKeyboardMarkup:
+    ikb_chat = InlineKeyboardMarkup(row_width=1)
+    ikb_chat.add(ikbb_kinolog_chat)
+    return ikb_chat
+
+def get_ikb_registration() -> InlineKeyboardMarkup:
+    ikb_registration = InlineKeyboardMarkup(row_width=1)
+    ikb_registration.add(ikbb_kinolog_registration)
+    return ikb_registration
+
+
+def get_ikb_user_type() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_kinolog_kinolog, ikbb_kinolog_user)
+    return ikb_user
+
+
+def get_ikb_kinolog_form() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_kinolog_form, ikbb_kinolog_back)
+    return ikb_user
+
+def get_ikb_kinolog_card() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_kinolog_card, ikbb_kinolog_back)
+    return ikb_user
+
+
+def get_ikb_send_card() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_kinolog_send_card, ikbb_kinolog_back)
+    return ikb_user
 
 def get_ikb_choose_kinolog() -> InlineKeyboardMarkup:
     ikb_kinolog = InlineKeyboardMarkup(row_width=1)

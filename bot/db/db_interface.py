@@ -18,8 +18,8 @@ def new_kinolog(chat_id: int, name: str, surname: str, patronymic: str, birthday
                        other_activities=other_activities, work_methods=work_methods,
                        choice_importance=choice_importance, training_situation=training_situation, advise=advise, problem=problem)
 
-def update_kinolog_card(kinolog_id:int, photo:str, intro:str):
-    sqlite.update_card(kinolog_id=kinolog_id,photo=photo, intro=intro)
+def update_kinolog_card(chat_id:int, photo:str, intro:str):
+    sqlite.update_card(chat_id=chat_id, photo=photo, intro=intro)
 
 def new_dog(chat_id: int, problem: str, age:str, breed: str, weight: int, origin: str, living_together: str,
             diseases: str):
@@ -32,8 +32,8 @@ def get_dog(dog_id: int):
 
     return dog
 
-def get_kinolog(kinolog_id: int):
-    db_kinolog = sqlite.get_kinolog(kinolog_id=kinolog_id)
+def get_kinolog(chat_id: int):
+    db_kinolog = sqlite.get_kinolog(chat_id=chat_id)
     kinolog = parse_kinolog(db_kinolog=db_kinolog)
 
     return kinolog
@@ -45,15 +45,14 @@ def get_kinologs_by_problem(problem: str):
 
     return kinologs
 
-def get_form_status(kinolog_id:int, form_status:str):
-    db_kinolog = sqlite.get_form_status(kinolog_id=kinolog_id, form_status=form_status)
-    status = parse_kinolog(db_kinolog=db_kinolog)
-
+def get_form_status(chat_id:int):
+    db_kinolog = sqlite.get_form_status(chat_id=chat_id)
+    status = parse_kinolog(db_kinolog=db_kinolog)['form_status']
     return status
 
 
-def new_consults_empty(kinolog_id: int, consult_date: str):
-    sqlite.new_consul_empty(kinolog_id=kinolog_id, consult_date=consult_date)
+def new_consults_empty(chat_id: int, consult_date: str):
+    sqlite.new_consul_empty(chat_id=chat_id, consult_date=consult_date)
 
 
 def update_consult(consult_id: int, consult_sum: int = None, dog_id: int = None):
@@ -70,23 +69,23 @@ def get_consults_by_dog(dog_id: int):
     return consults
 
 
-def get_consults_by_kinolog(kinolog_id: int):
-    db_consults = sqlite.get_consults_by_kinolog(kinolog_id=kinolog_id)
+def get_consults_by_kinolog(chat_id: int):
+    db_consults = sqlite.get_consults_by_kinolog(chat_id=chat_id)
     consults = parse_consults(db_consults=db_consults)
 
     return consults
 
 
-def get_consults_by_kinolog_and_dog(kinolog_id: int, dog_id: int):
-    db_consults = sqlite.get_consults_by_kinolog_and_dog(kinolog_id=kinolog_id, dog_id=dog_id)
+def get_consults_by_kinolog_and_dog(chat_id: int, dog_id: int):
+    db_consults = sqlite.get_consults_by_kinolog_and_dog(chat_id=chat_id, dog_id=dog_id)
     consults = parse_consults(db_consults=db_consults)
 
     return consults
 
 
-def delete_kinolog(kinolog_id: int):
-    sqlite.delete_consults_kinolog(kinolog_id=kinolog_id)
-    sqlite.delete_kinolog(kinolog_id=kinolog_id)
+def delete_kinolog(chat_id: int):
+    sqlite.delete_consults_kinolog(chat_id=chat_id)
+    sqlite.delete_kinolog(chat_id=chat_id)
 
 
 def delete_consult(consult_id: int):
