@@ -1,7 +1,7 @@
 from bot.db.db_interface import get_kinolog
 from .app import dp, bot
 from . import messages
-from . keyboards import get_ikb_registration, get_ikb_user_type, get_ikb_kinolog_form, get_ikb_kinolog_card
+from . keyboards import get_ikb_registration, get_ikb_user_type, get_ikb_kinolog_form, get_ikb_kinolog_card, get_ikb_client_form
 from aiogram import types, Dispatcher
 from .states import GeneralStates
 from aiogram.dispatcher import FSMContext
@@ -38,7 +38,7 @@ async def callback_load_interface(callback: types.CallbackQuery, state: FSMConte
                 await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_kinolog_card())
                 await GeneralStates.kinolog.set()
             else:
-                text = "Ваша заявка в ожидании"
+                text = "Ваша заявка в ожидании!\nНапишите /start чтобы начинать работать снова с ботом"
                 await bot.send_message(chat_id=callback.from_user.id, text=text)
                 await GeneralStates.start.set()
         except:
@@ -47,7 +47,7 @@ async def callback_load_interface(callback: types.CallbackQuery, state: FSMConte
             await GeneralStates.kinolog.set()
     elif callback.data == 'user':
         text = 'Это интерфейс клиента. \nЧто вы хотите делать дальше:'
-        await bot.send_message(chat_id=callback.from_user.id, text=text)
+        await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_client_form())
         await GeneralStates.user.set()
 
 

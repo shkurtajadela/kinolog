@@ -60,9 +60,14 @@ ikbb_kinolog_user = InlineKeyboardButton(text='Клиент', callback_data='use
 ikbb_kinolog_form = InlineKeyboardButton(text='Заполнить анкету', callback_data='form')
 ikbb_kinolog_card = InlineKeyboardButton(text='Заполнить карту', callback_data='card')
 
+ikbb_client_form = InlineKeyboardButton(text='Рассказать поподробнее о сложности с собакой', callback_data='form')
+
+
 ikbb_kinolog_send_card = InlineKeyboardButton(text='Отправить карту', callback_data='send')
-ikbb_kinolog_again_card = InlineKeyboardButton(text='Заполнить еще раз карту', callback_data='send')
 ikbb_kinolog_to_start = InlineKeyboardButton(text='Перейти к началу', callback_data='go_to_start')
+
+ikbb_kinolog_send_form = InlineKeyboardButton(text='Отправить карту', callback_data='send')
+ikbb_kinolog_change_form = InlineKeyboardButton(text='Изменить карту', callback_data='change')
 
 def get_ikb_chat() -> InlineKeyboardMarkup:
     ikb_chat = InlineKeyboardMarkup(row_width=1)
@@ -86,6 +91,11 @@ def get_ikb_kinolog_form() -> InlineKeyboardMarkup:
     ikb_user.add(ikbb_kinolog_form, ikbb_kinolog_back)
     return ikb_user
 
+def get_ikb_client_form() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_client_form, ikbb_kinolog_back)
+    return ikb_user
+
 def get_ikb_kinolog_card() -> InlineKeyboardMarkup:
     ikb_user = InlineKeyboardMarkup(row_width=1)
     ikb_user.add(ikbb_kinolog_card, ikbb_kinolog_back)
@@ -96,6 +106,30 @@ def get_ikb_send_card() -> InlineKeyboardMarkup:
     ikb_user = InlineKeyboardMarkup(row_width=1)
     ikb_user.add(ikbb_kinolog_send_card, ikbb_kinolog_back, ikbb_kinolog_to_start)
     return ikb_user
+
+def get_ikb_confirm_form() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_kinolog_send_form, ikbb_kinolog_change_form, ikbb_kinolog_to_start)
+    return ikb_user
+
+
+def get_ikb_change_form() -> InlineKeyboardMarkup:
+    ikb_change = InlineKeyboardMarkup(row_width=6)
+    row = []
+    for i in range(1, 25):
+        button = InlineKeyboardButton(str(i), callback_data=str(i))
+        row.append(button)
+        
+        if len(row) == 6:
+            ikb_change.add(row[0], row[1], row[2], row[3], row[4], row[5])
+            row = []
+    
+    change_all_button = InlineKeyboardButton("Изменить всю анкету", callback_data="change_all")
+    ikb_change.add(change_all_button)
+    ikb_change.add(ikbb_kinolog_send_form)
+    ikb_change.add(ikbb_kinolog_to_start)
+
+    return ikb_change
 
 def get_ikb_choose_kinolog() -> InlineKeyboardMarkup:
     ikb_kinolog = InlineKeyboardMarkup(row_width=1)
