@@ -60,14 +60,17 @@ ikbb_kinolog_user = InlineKeyboardButton(text='Клиент', callback_data='use
 ikbb_kinolog_form = InlineKeyboardButton(text='Заполнить анкету', callback_data='form')
 ikbb_kinolog_card = InlineKeyboardButton(text='Заполнить карту', callback_data='card')
 
-ikbb_client_form = InlineKeyboardButton(text='Рассказать поподробнее о сложности с собакой', callback_data='form')
+ikbb_kinolog_problem_next = InlineKeyboardButton(text='Перейти к следующим вопросам', callback_data='next')
 
+ikbb_client_form = InlineKeyboardButton(text='Рассказать поподробнее о сложности с собакой', callback_data='form')
 
 ikbb_kinolog_send_card = InlineKeyboardButton(text='Отправить карту', callback_data='send')
 ikbb_kinolog_to_start = InlineKeyboardButton(text='Перейти к началу', callback_data='go_to_start')
 
 ikbb_kinolog_send_form = InlineKeyboardButton(text='Отправить карту', callback_data='send')
 ikbb_kinolog_change_form = InlineKeyboardButton(text='Изменить карту', callback_data='change')
+
+ikbb_dog_get_kinologs = InlineKeyboardButton(text='Посмотреть подходящих специалистов', callback_data='get_kinologs')
 
 def get_ikb_chat() -> InlineKeyboardMarkup:
     ikb_chat = InlineKeyboardMarkup(row_width=1)
@@ -110,6 +113,11 @@ def get_ikb_send_card() -> InlineKeyboardMarkup:
 def get_ikb_confirm_form() -> InlineKeyboardMarkup:
     ikb_user = InlineKeyboardMarkup(row_width=1)
     ikb_user.add(ikbb_kinolog_send_form, ikbb_kinolog_change_form, ikbb_kinolog_to_start)
+    return ikb_user
+
+def get_ikb_confirm_dog_form() -> InlineKeyboardMarkup:
+    ikb_user = InlineKeyboardMarkup(row_width=1)
+    ikb_user.add(ikbb_dog_get_kinologs, ikbb_kinolog_to_start)
     return ikb_user
 
 
@@ -155,6 +163,11 @@ def get_ikb_supervised() -> InlineKeyboardMarkup:
 def get_ikb_problem() -> InlineKeyboardMarkup:
     ikb_problem = InlineKeyboardMarkup(row_width=1)
     ikb_problem.add(ikbb_problem_agression, ikbb_problem_barking, ikbb_problem_behaviour, ikbb_problem_hyper, ikbb_problem_anxiety, ikbb_problem_tension, ikbb_problem_agression_people, ikbb_problem_fear, ikbb_problem_food, ikbb_problem_leash, ikbb_problem_hearing, ikbb_problem_else)
+    return ikb_problem
+
+def get_ikb_problem_optional() -> InlineKeyboardMarkup:
+    ikb_problem = InlineKeyboardMarkup(row_width=1)
+    ikb_problem.add(ikbb_problem_agression, ikbb_problem_barking, ikbb_problem_behaviour, ikbb_problem_hyper, ikbb_problem_anxiety, ikbb_problem_tension, ikbb_problem_agression_people, ikbb_problem_fear, ikbb_problem_food, ikbb_problem_leash, ikbb_problem_hearing, ikbb_problem_else, ikbb_kinolog_problem_next)
     return ikb_problem
 
 def get_ikb_weight() -> InlineKeyboardMarkup:

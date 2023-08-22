@@ -39,8 +39,8 @@ def get_kinolog(chat_id: int):
     return kinolog
 
 
-def get_kinologs_by_problem(problem: str):
-    db_kinologs = sqlite.get_kinolog_by_dog_problem(problem=problem)
+def get_kinologs_by_problem(problem: str, chat_id: int):
+    db_kinologs = sqlite.get_kinolog_by_dog_problem(problem=problem, chat_id=chat_id)
     kinologs = parse_kinologs(db_kinologs=db_kinologs)
 
     return kinologs

@@ -93,8 +93,8 @@ def get_consults_by_dog(dog_id: int):
     return value
 
 
-def get_kinolog_by_dog_problem(problem: str):
-    value = cur.execute(f"SELECT * FROM Kinolog WHERE problem == '{problem}' AND form_status == 'selected'").fetchall()
+def get_kinolog_by_dog_problem(problem: str, chat_id: int):
+    value = cur.execute(f"SELECT * FROM Kinolog WHERE problem == '{problem}' AND form_status == 'selected' AND chat_id != {chat_id}").fetchall()
     return value
 
 

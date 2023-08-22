@@ -113,3 +113,10 @@ def show_kinolog_info(name: str, surname: str = None, patronymic: str = None, bi
     text += f"11. Персональный сайт с услугами: {kinolog_site}\n12. Источник мотивации к работе с собаками и людьми: {motivation}\n13. Этапы работы с клиентом: {work_stages}\n14. Собаку важно научить: {dog_teaching}\n15. Источник вдохновения в плане работы с собаками: {influenced_by}\n"
     text += f"16. Мнение о наказании собак: {punishment}\n17. Влияния наказаний: {punishment_effect}\n18. Использованные амуниции: {ammunition}\n19. Игры или занятия: {other_activities}\n20. Методики: {work_methods}\n21. Важность выбора: {choice_importance}\n22. Ситуация с дрессировкой собаки: {training_situation}\n23. Совет владельцам собак: {advise}\n24. Предпочтительная для решения проблема собак: {problem}"
     return text
+
+def show_dog_info(problem: str, age:str, breed: str, weight: int, origin: str, living_together: str, diseases: str):
+    text = "Анкета заполнена с следующими данными:\n"
+    text += f"Проблема: {problem}\nВозраст: {age}\nПород: {breed}\nВес: {weight}\nМесто, откуда взяли собаку: {origin}"
+    text += f"\nВремя, в течение которого собака живет с вами: {living_together}\nДиагностированные заболевания: {diseases}\n\n"
+    
+    return text

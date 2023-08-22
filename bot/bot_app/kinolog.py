@@ -1,7 +1,8 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
+import telegram
 from .app import dp, bot
-from .keyboards import get_ikb_supervised, get_ikb_problem, get_ikb_choose_kinolog_back, get_ikb_registration, get_ikb_send_card, get_ikb_kinolog_card, get_ikb_confirm_form, get_ikb_change_form
+from .keyboards import get_ikb_problem_optional, get_ikb_supervised, get_ikb_problem, get_ikb_choose_kinolog_back, get_ikb_registration, get_ikb_send_card, get_ikb_kinolog_card, get_ikb_confirm_form, get_ikb_change_form
 from aiogram import types, Dispatcher
 from .states import KinologFormStatesGroup, GeneralStates
 from bot.db.db_interface import new_kinolog, update_kinolog_card, get_form_status, get_kinolog
@@ -13,13 +14,13 @@ async def start_form_kinolog(callback:types.CallbackQuery, state:FSMContext):
     async with state.proxy() as data:
         await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
         if callback.data == "card":
-            text="Загрузите ваше фото"
+            text="Загрузите ваше фото:"
             msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_choose_kinolog_back())
             data['msg_id'] = msg.message_id
             await KinologFormStatesGroup.photo.set()
         elif callback.data == "form":
-            text = "На все вопросы нужно ответить! \n\nНапишите ваше имя:"
-            msg = await bot.send_message(chat_id=callback.from_user.id, text=text)
+            text = "На все вопросы нужно ответить! \n\n<b>Напишите ваше имя:</b>"
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, parse_mode=telegram.constants.ParseMode.HTML)
             data['msg_id'] = msg.message_id
             data['change'] = 0
             # data['patronymic'], data['birthday'], data['email'], data['education'], data['other_education'], data['communities'], data['practice_date'], data['online_work'], data['supervised'], data['other_interests'], data['kinolog_site'], data[ 'motivation'], data['work_stages'], data['dog_teaching'], data['influenced_by'], data['punishment'], data['punishment_effect'], data['ammunition'], data['other_activities'], data['work_methods'], data['choice_importance'], data['training_situation'], data['advise'], data['problem'] = "0"
@@ -60,16 +61,16 @@ async def form_load(message:types.Message, state:FSMContext, field: str, text: s
             'advise': "show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'])"
         }
         func = eval(ans[field])
-        text += f"\n\n{func}"
-        await bot.edit_message_text(chat_id=message.from_user.id, text=text, message_id=data['msg_id'])
+        msg_text = f"{func}\n\n{text}"
+        await bot.edit_message_text(chat_id=message.from_user.id, text=msg_text, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
         await KinologFormStatesGroup.next()
 
         
 async def form_load_kinolog_name(message:types.Message, state:FSMContext):
-    await form_load(message, state, 'name', 'Напишите вашу фамилию:')
+    await form_load(message, state, 'name', '<b>Напишите вашу фамилию:</b>')
 
 async def form_load_kinolog_surname(message:types.Message, state:FSMContext):
-    await form_load(message, state, 'surname', 'Напишите ваше отчество:')
+    await form_load(message, state, 'surname', '<b>Напишите ваше отчество:</b>')
 
 async def form_load_kinolog_patronymic(message:types.Message, state:FSMContext):
     await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
@@ -99,39 +100,38 @@ async def form_load_kinolog_birthday(callback:types.CallbackQuery, state:FSMCont
             data['birthday'] = str(result)
 
             if data['change'] == 0:
-                text = 'Напишите вашу почту:'
-                text += f"\n\n{show_created_check_info(data['name'], data['surname'], data['patronymic'], data['birthday'])}"
-                await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=data['msg_id'])
+                text = f"{show_created_check_info(data['name'], data['surname'], data['patronymic'], data['birthday'])}"
+                text += '\n\n<b>Напишите вашу почту:</b>'
+                await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
                 await KinologFormStatesGroup.next()
             else:
-                text = 'Что еще вы хотите изменить:'
-                text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-
-                await bot.edit_message_text(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form(), message_id=callback.message.message_id)
+                text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+                text += '\n\n<b>Что еще вы хотите изменить:</b>'
+                await bot.edit_message_text(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form(), message_id=callback.message.message_id, parse_mode=telegram.constants.ParseMode.HTML)
                 await KinologFormStatesGroup.change_form.set()
 
         
 async def form_load_kinolog_email(message:types.Message, state:FSMContext):
-    await form_load(message, state, 'email', 'Какое у вас высшее образование?')
+    await form_load(message, state, 'email', '<b>Какое у вас высшее образование?</b>')
 
 
 async def form_load_kinolog_education(message:types.Message, state:FSMContext):
-    text = 'Пожалуйста, перечислите все курсы или дополнительное образование (семинары, повышение квалификации, вебинары), которые вы прошли/прослушали:'
+    text = '<b>Пожалуйста, перечислите все курсы или дополнительное образование (семинары, повышение квалификации, вебинары), которые вы прошли/прослушали:</b>'
     await form_load(message, state, 'education', text)
 
 async def form_load_kinolog_other_education(message:types.Message, state:FSMContext):
-    text = 'Состоите ли вы в каких-либо профессиональных сообществах, ассоциациях? Если да, то в каких?'
+    text = '<b>Состоите ли вы в каких-либо профессиональных сообществах, ассоциациях? Если да, то в каких?</b>'
     await form_load(message, state, 'other_education', text)
 
 
 async def form_load_kinolog_communities(message:types.Message, state:FSMContext):
-    text = 'Когда вы начали свою кинологическую практику? Укажите месяц и год.'
+    text = '<b>Когда вы начали свою кинологическую практику? Укажите месяц и год.</b>'
     await form_load(message, state, 'communities', text)
 
 
 
 async def form_load_kinolog_practice_date(message:types.Message, state:FSMContext):
-    text = 'Есть ли опыт работы онлайн? Если да, сколько лет?'
+    text = '<b>Есть ли опыт работы онлайн? Если да, сколько лет?</b>'
     await form_load(message, state, 'practice_date', text)
 
 
@@ -143,11 +143,10 @@ async def form_load_kinolog_online_work(message:types.Message, state:FSMContext)
 
         data['online_work'] = message.text
 
-        text = 'Проходите ли вы супервизии?'
-        text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'])}"
-
+        text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'])}"
+        text += '\n\n<b>Проходите ли вы супервизии?</b>'
         reply_markup  = get_ikb_supervised()
-        msg = await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup)
+        msg = await bot.send_message(chat_id=message.from_user.id, text=text, reply_markup=reply_markup, parse_mode=telegram.constants.ParseMode.HTML)
         data['msg_id'] = msg.message_id
         await KinologFormStatesGroup.next()
 
@@ -162,96 +161,92 @@ async def form_load_kinolog_supervised(callback:types.CallbackQuery, state:FSMCo
         data['supervised'] = ans[callback.data]
 
         if data['change'] == 0:
-            text = 'Есть ли другая работа кроме специалиста по поведению собак? Как распределяются интересы и приоритеты?'
-            # text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'])}"
-
-            text += f"\n\n{show_created_check_info(data['name'], data['surname'], data['patronymic'], data['birthday'], data['email'], data['education'], data['other_education'], data['communities'], data['practice_date'], data['online_work'], data['supervised'])}"
-            await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=data['msg_id'])
+            text = f"{show_created_check_info(data['name'], data['surname'], data['patronymic'], data['birthday'], data['email'], data['education'], data['other_education'], data['communities'], data['practice_date'], data['online_work'], data['supervised'])}"
+            text += '\n\n<b>Есть ли другая работа кроме специалиста по поведению собак? Как распределяются интересы и приоритеты?</b>'
+            await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
             await KinologFormStatesGroup.next()
         else:
             await bot.delete_message(chat_id=callback.from_user.id, message_id=data['msg_id'])
-            text = 'Что еще вы хотите изменить:'
-            text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form())
+            text = '\n\n<b>Что еще вы хотите изменить:</b>'
+            text += f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form(), parse_mode=telegram.constants.ParseMode.HTML)
             data['msg_id'] = msg.message_id
             await KinologFormStatesGroup.change_form.set()
 
 
 async def form_load_kinolog_other_interests(message:types.Message, state:FSMContext):
-    text = 'Если у вас есть сайт с вашими услугами, пожалуйста, поделитесь им ниже'
+    text = '<b>Если у вас есть сайт с вашими услугами, пожалуйста, поделитесь им ниже</b>'
     await form_load(message, state, 'other_interests', text)
 
 
 async def form_load_kinolog_site(message:types.Message, state:FSMContext):
-    text = 'Теперь вопросы про ваш опыт и взаимодействия с собаками\nЧто вас мотивирует к работе с собаками и людьми?'
+    text = '<b>Теперь вопросы про ваш опыт и взаимодействия с собаками\nЧто вас мотивирует к работе с собаками и людьми?</b>'
     await form_load(message, state, 'kinolog_site', text)
 
 async def form_load_kinolog_motivation(message:types.Message, state:FSMContext):
-    text = 'Расскажите, каким образом обычно выглядит ваша работа с клиентом? Как вы работаете? Перечислите поэтапно.'
+    text = '<b>Расскажите, каким образом обычно выглядит ваша работа с клиентом? Как вы работаете? Перечислите поэтапно.</b>'
     await form_load(message, state, 'motivation', text)
 
 
 async def form_load_kinolog_work_stages(message:types.Message, state:FSMContext):
-    text = 'Как вам кажется, чему наиболее важно научить собаку? Пожалуйста, перечислите не более 4 пунктов.'
+    text = '<b>Как вам кажется, чему наиболее важно научить собаку? Пожалуйста, перечислите не более 4 пунктов.</b>'
     await form_load(message, state, 'work_stages', text)
 
 
 async def form_load_kinolog_dog_teaching(message:types.Message, state:FSMContext):
-    text = 'Как вам кажется, кто в большей степени повлиял на вас или вдохновил вас с точки зрения работы с собаками?'
+    text = '<b>Как вам кажется, кто в большей степени повлиял на вас или вдохновил вас с точки зрения работы с собаками?</b>'
     await form_load(message, state, 'dog_teaching', text)
 
 
 async def form_load_kinolog_influenced_by(message:types.Message, state:FSMContext):
-    text = 'Что вы считаете наказанием в работе с собаками?'
+    text = '<b>Что вы считаете наказанием в работе с собаками?</b>'
     await form_load(message, state, 'influenced_by', text)
 
 
 async def form_load_kinolog_punishment(message:types.Message, state:FSMContext):
-    text = 'Какое влияние может иметь наказание на собак?'
+    text = '<b>Какое влияние может иметь наказание на собак?</b>'
     await form_load(message, state, 'punishment', text)
 
 
 async def form_load_kinolog_punishment_effect(message:types.Message, state:FSMContext):
-    text = 'Какую амуницию вы используете в работе и рекомендуете? Почему?'
+    text = '<b>Какую амуницию вы используете в работе и рекомендуете? Почему?</b>'
     await form_load(message, state, 'punishment_effect', text)
 
 
 async def form_load_kinolog_ammunition(message:types.Message, state:FSMContext):
-    text = 'Есть ли какие-нибудь игры или занятия, которые вы проводите со своими собаками, клиентами или рекомендуете клиентам? Почему?'
+    text = '<b>Есть ли какие-нибудь игры или занятия, которые вы проводите со своими собаками, клиентами или рекомендуете клиентам? Почему?</b>'
     await form_load(message, state, 'ammunition', text)
 
 
 async def form_load_kinolog_other_activities(message:types.Message, state:FSMContext):
-    text = 'Используете ли вы или рекомендуете какие-то конкретные методики или протоколы в работе с собаками? Почему?'
+    text = '<b>Используете ли вы или рекомендуете какие-то конкретные методики или протоколы в работе с собаками? Почему?</b>'
     await form_load(message, state, 'other_activities', text)
 
 async def form_load_kinolog_work_methods(message:types.Message, state:FSMContext):
-    text = 'Почему выбор может быть важной частью или относиться к работе с собаками?'
+    text = '<b>Почему выбор может быть важной частью или относиться к работе с собаками?</b>'
     await form_load(message, state, 'work_methods', text)
 
 async def form_load_kinolog_choice_importance(message:types.Message, state:FSMContext):
-    text = 'Что бы вы сделали, если бы столкнулись с ситуацией, связанной с дрессировкой собаки, которую вы изо всех сил пытались решить или разобрать?'
+    text = '<b>Что бы вы сделали, если бы столкнулись с ситуацией, связанной с дрессировкой собаки, которую вы изо всех сил пытались решить или разобрать?</b>'
     await form_load(message, state, 'choice_importance', text)
 
 async def form_load_kinolog_training_situation(message:types.Message, state:FSMContext):
-    text = 'Если не учитывать особенности отдельно взятой собаки, что бы вы могли посоветовать всем владельцам собак?'
+    text = '<b>Если не учитывать особенности отдельно взятой собаки, что бы вы могли посоветовать всем владельцам собак?</b>'
     await form_load(message, state, 'training_situation', text)
 
 async def form_load_kinolog_advise(message:types.Message, state:FSMContext):
-    await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
     async with state.proxy() as data:
         data['advise'] = message.text
-
-        text = "Какие проблемы собаки вы бы хотели решать?"
-        text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'])}"
-
+        
+        text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'])}"
+        text += "\n\n<b>Какие проблемы собаки вы бы хотели решать?</b>"
+        await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
         reply_markup  = get_ikb_problem()
-        await bot.edit_message_text(chat_id=message.from_user.id, text=text, reply_markup=reply_markup, message_id=data['msg_id'])
+        await bot.edit_message_text(chat_id=message.from_user.id, text=text, reply_markup=reply_markup, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
         await KinologFormStatesGroup.next()
 
 
-async def form_load_kinolog_problem(callback:types.CallbackQuery, state:FSMContext):
-    await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
+async def form_load_kinolog_first_problem(callback:types.CallbackQuery, state:FSMContext):
     async with state.proxy() as data:
         ans = {'agression': 'Агрессия по отношению к другим собакам/животным',
          'barking': 'Лай на звуки/дверь и тревожность дома',
@@ -268,15 +263,74 @@ async def form_load_kinolog_problem(callback:types.CallbackQuery, state:FSMConte
          }
         data['problem'] = ans[callback.data]
 
+        text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'])}"
+        text += "\n\n<b>Вы можете выбрать до трех проблем собаки, которые хотели бы решить. Выберите вторую:</b>"
+        reply_markup  = get_ikb_problem_optional()
+        await bot.edit_message_text(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
+        await KinologFormStatesGroup.next()
+
+
+
+async def form_load_kinolog_second_problem(callback:types.CallbackQuery, state:FSMContext):
+    async with state.proxy() as data:
+        ans = {'agression': 'Агрессия по отношению к другим собакам/животным',
+         'barking': 'Лай на звуки/дверь и тревожность дома',
+         'behaviour': 'Деструктивное поведение (порча вещей, дефекция и тд)',
+         'hyper': 'Гиперактивность (копание, прыгучесть и тд)',
+         'anxiety': 'Сепарационная тревога (скулит или воет, когда оставляют одного / уходят)',
+         'tension': 'Подавленное состояние животного без медицинских причин',
+         'agression_people': 'Агрессия ко мне и/или другим людям',
+         'fear': 'Страх других животных / собак',
+         'food': 'Проблемы с пищевым поведением (подбор на улице, сложности дома)',
+         'leash': 'Тянет поводок',
+         'hearing': 'Проблемы с послушанием и командами',
+         'else': 'Другое...',
+         'next': 'next'
+         }
+        if ans[callback.data] != 'next':
+            data['problem'] += f'; {ans[callback.data]}'
+            
+            text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'])}"
+            text += "\n\n<b>Вы можете выбрать до трех проблем собаки, которые хотели бы решить. Выберите третью:</b>"
+            reply_markup  = get_ikb_problem_optional()
+            await bot.edit_message_text(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
+            await KinologFormStatesGroup.next()
+        elif ans[callback.data] == 'next':
+            text = '\n\n<b>Что хотите делать:</b>'
+            text += f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_confirm_form(), parse_mode=telegram.constants.ParseMode.HTML)
+            await KinologFormStatesGroup.next()
+            await KinologFormStatesGroup.form_confirm.set()
+
+
+async def form_load_kinolog_last_problem(callback:types.CallbackQuery, state:FSMContext):
+    async with state.proxy() as data:
+        ans = {'agression': 'Агрессия по отношению к другим собакам/животным',
+         'barking': 'Лай на звуки/дверь и тревожность дома',
+         'behaviour': 'Деструктивное поведение (порча вещей, дефекция и тд)',
+         'hyper': 'Гиперактивность (копание, прыгучесть и тд)',
+         'anxiety': 'Сепарационная тревога (скулит или воет, когда оставляют одного / уходят)',
+         'tension': 'Подавленное состояние животного без медицинских причин',
+         'agression_people': 'Агрессия ко мне и/или другим людям',
+         'fear': 'Страх других животных / собак',
+         'food': 'Проблемы с пищевым поведением (подбор на улице, сложности дома)',
+         'leash': 'Тянет поводок',
+         'hearing': 'Проблемы с послушанием и командами',
+         'else': 'Другое...',
+         'next': 'next'
+         }
+        if ans[callback.data] != 'next': 
+            data['problem'] += f'; {ans[callback.data]}'
+
         if data['change'] == 0:
-            text = 'Что хотите делать:'
-            text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_confirm_form())
+            text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            text += '\n\n<b>Что хотите делать:</b>'
+            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_confirm_form(), parse_mode=telegram.constants.ParseMode.HTML)
             await KinologFormStatesGroup.next()
         else:
-            text = 'Что еще вы хотите изменить:'
-            text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form())
+            text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            text += '\n\n<b>Что еще вы хотите изменить:</b>'            
+            await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form(), parse_mode=telegram.constants.ParseMode.HTML)
             await KinologFormStatesGroup.change_form.set()
 
 async def form_load_confirm(callback:types.CallbackQuery, state:FSMContext):
@@ -296,10 +350,10 @@ async def form_load_confirm(callback:types.CallbackQuery, state:FSMContext):
             await bot.send_message(chat_id=callback.from_user.id, text=text)
             await GeneralStates.start.set()
         elif callback.data == "change":
-            text = 'Что именно вы хотите изменить:'
-            text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-
-            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form())
+            
+            text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            text += '\n\n<b>Что именно вы хотите изменить:</b>'
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=get_ikb_change_form(), parse_mode=telegram.constants.ParseMode.HTML)
             data['msg_id'] = msg.message_id
             await KinologFormStatesGroup.next()
         elif callback.data == "go_to_start":
@@ -313,16 +367,17 @@ async def form_load_edit(message:types.Message, state:FSMContext):
 
         if data['field'] not in ['name', 'surname']:
             await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
-            text = 'Что еще вы хотите изменить:'
-            text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-
-            await bot.edit_message_text(chat_id=message.from_user.id, text=text, reply_markup=get_ikb_change_form(), message_id=data['msg_id'])
+            
+            text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            text += '\n\n<b>Что еще вы хотите изменить:</b>'
+            await bot.edit_message_text(chat_id=message.from_user.id, text=text, reply_markup=get_ikb_change_form(), message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
             await KinologFormStatesGroup.change_form.set()
         elif data['field'] == 'name':
             await bot.delete_message(chat_id=message.from_user.id, message_id=message.message_id)
-            text = 'Напишите вашу фамилию:'
-            text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-            await bot.edit_message_text(chat_id=message.from_user.id, text=text, message_id=data['msg_id'])
+            
+            text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+            text += '\n\n<b>Напишите вашу фамилию:</b>'
+            await bot.edit_message_text(chat_id=message.from_user.id, text=text, message_id=data['msg_id'], parse_mode=telegram.constants.ParseMode.HTML)
             await KinologFormStatesGroup.surname.set()
 
 async def form_load_change(callback:types.CallbackQuery, state:FSMContext):
@@ -343,8 +398,8 @@ async def form_load_change(callback:types.CallbackQuery, state:FSMContext):
         elif callback.data == "change_all":
             await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
             data['change'] = 0
-            text = 'Напишите ваше имя:'
-            msg = await bot.send_message(chat_id=callback.from_user.id, text=text)
+            text = '<b>Напишите ваше имя:</b>'
+            msg = await bot.send_message(chat_id=callback.from_user.id, text=text, parse_mode=telegram.constants.ParseMode.HTML)
             data['msg_id'] = msg.message_id
             await KinologFormStatesGroup.name.set()
         elif callback.data == "go_to_start":
@@ -409,7 +464,7 @@ async def form_load_change(callback:types.CallbackQuery, state:FSMContext):
 
             if callback.data not in ['2', '9', '24']:
                 await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
-                msg = await bot.send_message(chat_id=callback.from_user.id, text=ans_text[callback.data])
+                msg = await bot.send_message(chat_id=callback.from_user.id, text=ans_text[callback.data], parse_mode=telegram.constants.ParseMode.HTML)
                 data['msg_id'] = msg.message_id
                 await KinologFormStatesGroup.edit_form.set()
             elif callback.data == '2':
@@ -422,18 +477,19 @@ async def form_load_change(callback:types.CallbackQuery, state:FSMContext):
                 await KinologFormStatesGroup.birthday.set()
             elif callback.data == '9':
                 await bot.delete_message(chat_id=callback.from_user.id, message_id=callback.message.message_id)
-                text = 'Проходите ли вы супервизии?'
-                text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
-
+                
+                text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+                text += '\n\n<b>Проходите ли вы супервизии?</b>'
                 reply_markup  = get_ikb_supervised()
-                msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup)
+                msg = await bot.send_message(chat_id=callback.from_user.id, text=text, reply_markup=reply_markup, parse_mode=telegram.constants.ParseMode.HTML)
                 data['msg_id'] = msg.message_id
                 await KinologFormStatesGroup.supervised.set()
             else:
-                text = "Какие проблемы собаки вы бы хотели решать?"
-                text += f"\n\n{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+                
+                text = f"{show_created_check_info(name=data['name'], surname=data['surname'], patronymic=data['patronymic'], birthday=data['birthday'], email=data['email'], education=data['education'], other_education=data['other_education'], communities=data['communities'], practice_date=data['practice_date'], online_work=data['online_work'], supervised=data['supervised'], other_interests=data['other_interests'], kinolog_site=data['kinolog_site'], motivation=data[ 'motivation'], work_stages=data['work_stages'], dog_teaching=data['dog_teaching'], influenced_by=data['influenced_by'],punishment=data['punishment'], punishment_effect=data['punishment_effect'], ammunition=data['ammunition'], other_activities=data['other_activities'], work_methods=data['work_methods'], choice_importance=data['choice_importance'], training_situation=data['training_situation'], advise=data['advise'], problem=data['problem'])}"
+                text += "\n\n<b>Какие проблемы собаки вы бы хотели решать?</b>"
                 reply_markup  = get_ikb_problem()
-                await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=callback.message.message_id, reply_markup=reply_markup)
+                await bot.edit_message_text(chat_id=callback.from_user.id, text=text, message_id=callback.message.message_id, reply_markup=reply_markup, parse_mode=telegram.constants.ParseMode.HTML)
                 await KinologFormStatesGroup.problem.set()
 
 
@@ -511,7 +567,9 @@ def register_main_handlers_kinolog(dp: Dispatcher) -> None:
     dp.register_message_handler(form_load_kinolog_choice_importance, state=KinologFormStatesGroup.choice_importance)
     dp.register_message_handler(form_load_kinolog_training_situation, state=KinologFormStatesGroup.training_situation)
     dp.register_message_handler(form_load_kinolog_advise, state=KinologFormStatesGroup.advise)
-    dp.register_callback_query_handler(form_load_kinolog_problem, state=KinologFormStatesGroup.problem)
+    dp.register_callback_query_handler(form_load_kinolog_first_problem, state=KinologFormStatesGroup.problem)
+    dp.register_callback_query_handler(form_load_kinolog_second_problem, state=KinologFormStatesGroup.problem2)
+    dp.register_callback_query_handler(form_load_kinolog_last_problem, state=KinologFormStatesGroup.problem3)
     dp.register_callback_query_handler(form_load_confirm, state=KinologFormStatesGroup.form_confirm)
     dp.register_callback_query_handler(form_load_change, state=KinologFormStatesGroup.change_form)
     dp.register_message_handler(form_load_edit, state=KinologFormStatesGroup.edit_form)

@@ -34,6 +34,8 @@ class KinologFormStatesGroup(StatesGroup):
     training_situation = State()
     advise = State()
     problem = State()
+    problem2 = State()
+    problem3 = State()
     form_confirm = State()
     change_form = State()
     edit_form = State()
@@ -59,6 +61,7 @@ class DogFormStatesGroup(StatesGroup):
     living_together = State() 
     diseases = State()
     diseases_list = State()
+    form_confirm = State()
     kinolog_choose = State()
     chat = State()
     
